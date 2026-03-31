@@ -1,0 +1,818 @@
+- generic [ref=e2]:
+  - region
+  - generic [ref=e3]:
+    - link "Skip to content" [ref=e4] [cursor=pointer]:
+      - /url: "#start-of-content"
+    - banner [ref=e6]:
+      - heading "Navigation Menu" [level=2] [ref=e7]
+      - generic [ref=e9]:
+        - button "Toggle navigation" [ref=e11] [cursor=pointer]
+        - link "Homepage" [ref=e17] [cursor=pointer]:
+          - /url: /
+          - img [ref=e18]
+        - generic [ref=e20]:
+          - link "Sign in" [ref=e21] [cursor=pointer]:
+            - /url: /login?return_to=https%3A%2F%2Fgithub.com%2Fslopus%2Fhappy
+          - button "Appearance settings" [ref=e24] [cursor=pointer]:
+            - img
+  - main [ref=e28]:
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - generic [ref=e32]:
+          - img [ref=e33]
+          - link "slopus" [ref=e36] [cursor=pointer]:
+            - /url: /slopus
+          - generic [ref=e37]: /
+          - strong [ref=e38]:
+            - link "happy" [ref=e39] [cursor=pointer]:
+              - /url: /slopus/happy
+          - generic [ref=e40]: Public
+        - generic [ref=e41]:
+          - list:
+            - listitem [ref=e42]:
+              - link "You must be signed in to change notification settings" [ref=e43] [cursor=pointer]:
+                - /url: /login?return_to=%2Fslopus%2Fhappy
+                - img [ref=e44]
+                - text: Notifications
+            - listitem [ref=e46]:
+              - link "Fork 1.3k" [ref=e47] [cursor=pointer]:
+                - /url: /login?return_to=%2Fslopus%2Fhappy
+                - img [ref=e48]
+                - text: Fork
+                - generic "1,336" [ref=e50]: 1.3k
+            - listitem [ref=e51]:
+              - link "You must be signed in to star a repository" [ref=e53] [cursor=pointer]:
+                - /url: /login?return_to=%2Fslopus%2Fhappy
+                - img [ref=e54]
+                - text: Star
+                - generic "16792 users starred this repository" [ref=e56]: 16.8k
+      - navigation "Repository" [ref=e57]:
+        - list [ref=e58]:
+          - listitem [ref=e59]:
+            - link "Code" [ref=e60] [cursor=pointer]:
+              - /url: /slopus/happy
+              - img [ref=e61]
+              - generic [ref=e63]: Code
+          - listitem [ref=e64]:
+            - link "Issues 501" [ref=e65] [cursor=pointer]:
+              - /url: /slopus/happy/issues
+              - img [ref=e66]
+              - generic [ref=e69]: Issues
+              - generic "501" [ref=e70]
+          - listitem [ref=e71]:
+            - link "Pull requests 152" [ref=e72] [cursor=pointer]:
+              - /url: /slopus/happy/pulls
+              - img [ref=e73]
+              - generic [ref=e75]: Pull requests
+              - generic "152" [ref=e76]
+          - listitem [ref=e77]:
+            - link "Discussions" [ref=e78] [cursor=pointer]:
+              - /url: /slopus/happy/discussions
+              - img [ref=e79]
+              - generic [ref=e81]: Discussions
+          - listitem [ref=e82]:
+            - link "Actions" [ref=e83] [cursor=pointer]:
+              - /url: /slopus/happy/actions
+              - img [ref=e84]
+              - generic [ref=e86]: Actions
+          - listitem [ref=e87]:
+            - link "Projects" [ref=e88] [cursor=pointer]:
+              - /url: /slopus/happy/projects
+              - img [ref=e89]
+              - generic [ref=e91]: Projects
+          - listitem [ref=e92]
+          - listitem [ref=e93]
+        - button "Additional navigation options" [ref=e97] [cursor=pointer]:
+          - img
+    - generic [ref=e110]:
+      - heading "slopus/happy" [level=1] [ref=e112]
+      - generic [ref=e113]:
+        - generic [ref=e116]:
+          - generic [ref=e117]:
+            - generic [ref=e118]:
+              - button "main branch" [ref=e120] [cursor=pointer]:
+                - generic [ref=e121]:
+                  - generic [ref=e123]:
+                    - img [ref=e125]
+                    - generic [ref=e128]: main
+                  - generic:
+                    - img
+              - generic [ref=e129]:
+                - link "Go to Branches page" [ref=e130] [cursor=pointer]:
+                  - /url: /slopus/happy/branches
+                  - img [ref=e131]
+                - link "Go to Tags page" [ref=e133] [cursor=pointer]:
+                  - /url: /slopus/happy/tags
+                  - img [ref=e134]
+            - generic [ref=e136]:
+              - button "Go to file" [ref=e139] [cursor=pointer]:
+                - generic [ref=e141]: Go to file
+              - button "Code" [ref=e142] [cursor=pointer]:
+                - generic [ref=e143]:
+                  - generic:
+                    - img
+                  - generic [ref=e144]: Code
+                  - generic:
+                    - img
+          - generic [ref=e145]:
+            - generic [ref=e146]:
+              - heading "Folders and files" [level=2] [ref=e147]
+              - table "Folders and files" [ref=e148]:
+                - rowgroup:
+                  - row "Name Last commit message Last commit date":
+                    - columnheader "Name"
+                    - columnheader "Last commit message":
+                      - generic "Last commit message"
+                    - columnheader "Last commit date":
+                      - generic "Last commit date"
+                - rowgroup [ref=e149]:
+                  - 'row "Latest commit Kirill Dubovitskiy claude happy-otter Show 3 authors and Kirill Dubovitskiy docs: consolidate contributing guidelines into single docs/CONTRIBUTI… Open commit details success Commit 49eb1fc · Mar 30, 2026yesterday History View commit history for this file." [ref=e150]':
+                    - 'cell "Latest commit Kirill Dubovitskiy claude happy-otter Show 3 authors and Kirill Dubovitskiy docs: consolidate contributing guidelines into single docs/CONTRIBUTI… Open commit details success Commit 49eb1fc · Mar 30, 2026yesterday History View commit history for this file." [ref=e151]':
+                      - generic [ref=e152]:
+                        - heading "Latest commit" [level=2] [ref=e153]
+                        - generic [ref=e154]:
+                          - generic [ref=e156]:
+                            - generic [ref=e158]:
+                              - img "Kirill Dubovitskiy" [ref=e159]
+                              - img "claude" [ref=e160]
+                              - img "happy-otter" [ref=e161]
+                            - button "Show 3 authors" [ref=e162] [cursor=pointer]: 3 people
+                            - generic [ref=e163]: and
+                            - generic "Kirill Dubovitskiy" [ref=e165]
+                          - generic [ref=e166]:
+                            - 'link "docs: consolidate contributing guidelines into single docs/CONTRIBUTI…" [ref=e169] [cursor=pointer]':
+                              - /url: /slopus/happy/commit/49eb1fcd1faca49669b386e1e9f32f7bc0a55d16
+                            - button "Open commit details" [ref=e170] [cursor=pointer]:
+                              - img [ref=e171]
+                            - button "success" [ref=e173] [cursor=pointer]:
+                              - img [ref=e174]
+                        - generic [ref=e176]:
+                          - generic [ref=e178]:
+                            - link "Commit 49eb1fc" [ref=e179] [cursor=pointer]:
+                              - /url: /slopus/happy/commit/49eb1fcd1faca49669b386e1e9f32f7bc0a55d16
+                              - text: 49eb1fc
+                            - text: ·
+                            - generic "Mar 30, 2026, 3:26 PM GMT+8" [ref=e180]: Mar 30, 2026yesterday
+                          - generic [ref=e181]:
+                            - heading "History" [level=2] [ref=e182]
+                            - link "View commit history for this file." [ref=e184] [cursor=pointer]:
+                              - /url: /slopus/happy/commits/main/
+                              - generic [ref=e185]:
+                                - generic:
+                                  - img
+                  - 'row ".claude/skills, (Directory) feat: add agent-browser and terminal-emulator skills Feb 26, 20262 months ago" [ref=e186]':
+                    - cell ".claude/skills, (Directory)" [ref=e187]:
+                      - generic [ref=e188]:
+                        - img [ref=e189]
+                        - link ".claude/skills, (Directory)" [ref=e194] [cursor=pointer]:
+                          - /url: /slopus/happy/tree/main/.claude/skills
+                          - text: .claude/skills
+                    - 'cell "feat: add agent-browser and terminal-emulator skills" [ref=e195]':
+                      - 'link "feat: add agent-browser and terminal-emulator skills" [ref=e198] [cursor=pointer]':
+                        - /url: /slopus/happy/commit/4f2d02c10c66f2357d31dcea94ec382789065f30
+                    - cell "Feb 26, 20262 months ago" [ref=e199]:
+                      - generic [ref=e200]: Feb 26, 20262 months ago
+                  - 'row ".github, (Directory) Clean up repo: remove dev slop from README, move experimental docs, f… Mar 23, 2026last week" [ref=e201]':
+                    - cell ".github, (Directory)" [ref=e202]:
+                      - generic [ref=e203]:
+                        - img [ref=e204]
+                        - link ".github, (Directory)" [ref=e209] [cursor=pointer]:
+                          - /url: /slopus/happy/tree/main/.github
+                          - text: .github
+                    - 'cell "Clean up repo: remove dev slop from README, move experimental docs, f…" [ref=e210]':
+                      - 'link "Clean up repo: remove dev slop from README, move experimental docs, f…" [ref=e213] [cursor=pointer]':
+                        - /url: /slopus/happy/commit/d0228ad86c8f2bcb144e8c11eb25dcd2b760e7c5
+                    - cell "Mar 23, 2026last week" [ref=e214]:
+                      - generic [ref=e215]: Mar 23, 2026last week
+                  - 'row "docs, (Directory) docs: consolidate contributing guidelines into single docs/CONTRIBUTI… Mar 30, 2026yesterday" [ref=e216]':
+                    - cell "docs, (Directory)" [ref=e217]:
+                      - generic [ref=e218]:
+                        - img [ref=e219]
+                        - link "docs, (Directory)" [ref=e224] [cursor=pointer]:
+                          - /url: /slopus/happy/tree/main/docs
+                          - text: docs
+                    - 'cell "docs: consolidate contributing guidelines into single docs/CONTRIBUTI…" [ref=e225]':
+                      - 'link "docs: consolidate contributing guidelines into single docs/CONTRIBUTI…" [ref=e228] [cursor=pointer]':
+                        - /url: /slopus/happy/commit/49eb1fcd1faca49669b386e1e9f32f7bc0a55d16
+                    - cell "Mar 30, 2026yesterday" [ref=e229]:
+                      - generic [ref=e230]: Mar 30, 2026yesterday
+                  - row "environments, (Directory) Show explicit environment URLs Mar 22, 2026last week" [ref=e231]:
+                    - cell "environments, (Directory)" [ref=e232]:
+                      - generic [ref=e233]:
+                        - img [ref=e234]
+                        - link "environments, (Directory)" [ref=e239] [cursor=pointer]:
+                          - /url: /slopus/happy/tree/main/environments
+                          - text: environments
+                    - cell "Show explicit environment URLs" [ref=e240]:
+                      - link "Show explicit environment URLs" [ref=e243] [cursor=pointer]:
+                        - /url: /slopus/happy/commit/251d4abcfbc07a78368e5f4439cdb323959baf16
+                    - cell "Mar 22, 2026last week" [ref=e244]:
+                      - generic [ref=e245]: Mar 22, 2026last week
+                  - 'row "packages, (Directory) docs: consolidate contributing guidelines into single docs/CONTRIBUTI… Mar 30, 2026yesterday" [ref=e246]':
+                    - cell "packages, (Directory)" [ref=e247]:
+                      - generic [ref=e248]:
+                        - img [ref=e249]
+                        - link "packages, (Directory)" [ref=e254] [cursor=pointer]:
+                          - /url: /slopus/happy/tree/main/packages
+                          - text: packages
+                    - 'cell "docs: consolidate contributing guidelines into single docs/CONTRIBUTI…" [ref=e255]':
+                      - 'link "docs: consolidate contributing guidelines into single docs/CONTRIBUTI…" [ref=e258] [cursor=pointer]':
+                        - /url: /slopus/happy/commit/49eb1fcd1faca49669b386e1e9f32f7bc0a55d16
+                    - cell "Mar 30, 2026yesterday" [ref=e259]:
+                      - generic [ref=e260]: Mar 30, 2026yesterday
+                  - 'row "patches, (Directory) fix(pglite): patch pglite-prisma-adapter Bytes column serialization Feb 26, 20262 months ago" [ref=e261]':
+                    - cell "patches, (Directory)" [ref=e262]:
+                      - generic [ref=e263]:
+                        - img [ref=e264]
+                        - link "patches, (Directory)" [ref=e269] [cursor=pointer]:
+                          - /url: /slopus/happy/tree/main/patches
+                          - text: patches
+                    - 'cell "fix(pglite): patch pglite-prisma-adapter Bytes column serialization" [ref=e270]':
+                      - 'link "fix(pglite): patch pglite-prisma-adapter Bytes column serialization" [ref=e273] [cursor=pointer]':
+                        - /url: /slopus/happy/commit/9e995836316295da4c7adc327188ab411b9d972b
+                    - cell "Feb 26, 20262 months ago" [ref=e274]:
+                      - generic [ref=e275]: Feb 26, 20262 months ago
+                  - 'row "scripts, (Directory) fix(pglite): patch pglite-prisma-adapter Bytes column serialization Feb 26, 20262 months ago" [ref=e276]':
+                    - cell "scripts, (Directory)" [ref=e277]:
+                      - generic [ref=e278]:
+                        - img [ref=e279]
+                        - link "scripts, (Directory)" [ref=e284] [cursor=pointer]:
+                          - /url: /slopus/happy/tree/main/scripts
+                          - text: scripts
+                    - 'cell "fix(pglite): patch pglite-prisma-adapter Bytes column serialization" [ref=e285]':
+                      - 'link "fix(pglite): patch pglite-prisma-adapter Bytes column serialization" [ref=e288] [cursor=pointer]':
+                        - /url: /slopus/happy/commit/9e995836316295da4c7adc327188ab411b9d972b
+                    - cell "Feb 26, 20262 months ago" [ref=e289]:
+                      - generic [ref=e290]: Feb 26, 20262 months ago
+                  - 'row ".dockerignore, (File) chore(build): move dockerfiles to repo root Jan 29, 20263 months ago" [ref=e291]':
+                    - cell ".dockerignore, (File)" [ref=e292]:
+                      - generic [ref=e293]:
+                        - img [ref=e294]
+                        - link ".dockerignore, (File)" [ref=e299] [cursor=pointer]:
+                          - /url: /slopus/happy/blob/main/.dockerignore
+                          - text: .dockerignore
+                    - 'cell "chore(build): move dockerfiles to repo root" [ref=e300]':
+                      - 'link "chore(build): move dockerfiles to repo root" [ref=e303] [cursor=pointer]':
+                        - /url: /slopus/happy/commit/3debb31549d4e231470b43b2675d8aed2e91f43b
+                    - cell "Jan 29, 20263 months ago" [ref=e304]:
+                      - generic [ref=e305]: Jan 29, 20263 months ago
+                  - 'row ".gitignore, (File) Merge pull request #911 from chris-yyau/fix/quick-wins-868-866-113 Mar 30, 2026yesterday" [ref=e306]':
+                    - cell ".gitignore, (File)" [ref=e307]:
+                      - generic [ref=e308]:
+                        - img [ref=e309]
+                        - link ".gitignore, (File)" [ref=e314] [cursor=pointer]:
+                          - /url: /slopus/happy/blob/main/.gitignore
+                          - text: .gitignore
+                    - 'cell "Merge pull request #911 from chris-yyau/fix/quick-wins-868-866-113" [ref=e315]':
+                      - generic [ref=e317]:
+                        - link "Merge pull request" [ref=e318] [cursor=pointer]:
+                          - /url: /slopus/happy/commit/b9153a91f0794d65c7044f19c90bf23e4afa7eac
+                        - link "#911" [ref=e319] [cursor=pointer]:
+                          - /url: https://github.com/slopus/happy/pull/911
+                        - link "from chris-yyau/fix/quick-wins-868-866-113" [ref=e320] [cursor=pointer]:
+                          - /url: /slopus/happy/commit/b9153a91f0794d65c7044f19c90bf23e4afa7eac
+                    - cell "Mar 30, 2026yesterday" [ref=e321]:
+                      - generic [ref=e322]: Mar 30, 2026yesterday
+                  - 'row "Dockerfile, (File) fix: gitignore .env.production + Docker build fixes (#868, #866) Mar 24, 2026last week" [ref=e323]':
+                    - cell "Dockerfile, (File)" [ref=e324]:
+                      - generic [ref=e325]:
+                        - img [ref=e326]
+                        - link "Dockerfile, (File)" [ref=e331] [cursor=pointer]:
+                          - /url: /slopus/happy/blob/main/Dockerfile
+                          - text: Dockerfile
+                    - 'cell "fix: gitignore .env.production + Docker build fixes (#868, #866)" [ref=e332]':
+                      - generic [ref=e334]:
+                        - 'link "fix: gitignore .env.production + Docker build fixes (" [ref=e335] [cursor=pointer]':
+                          - /url: /slopus/happy/commit/82f2b74300440e843c59d77a230ddea0d409f341
+                        - link "#868" [ref=e336] [cursor=pointer]:
+                          - /url: https://github.com/slopus/happy/issues/868
+                        - link "," [ref=e337] [cursor=pointer]:
+                          - /url: /slopus/happy/commit/82f2b74300440e843c59d77a230ddea0d409f341
+                        - link "#866" [ref=e338] [cursor=pointer]:
+                          - /url: https://github.com/slopus/happy/issues/866
+                        - link ")" [ref=e339] [cursor=pointer]:
+                          - /url: /slopus/happy/commit/82f2b74300440e843c59d77a230ddea0d409f341
+                    - cell "Mar 24, 2026last week" [ref=e340]:
+                      - generic [ref=e341]: Mar 24, 2026last week
+                  - 'row "Dockerfile.server, (File) fix: copy root patches/ dir into Docker builds Mar 23, 2026last week" [ref=e342]':
+                    - cell "Dockerfile.server, (File)" [ref=e343]:
+                      - generic [ref=e344]:
+                        - img [ref=e345]
+                        - link "Dockerfile.server, (File)" [ref=e350] [cursor=pointer]:
+                          - /url: /slopus/happy/blob/main/Dockerfile.server
+                          - text: Dockerfile.server
+                    - 'cell "fix: copy root patches/ dir into Docker builds" [ref=e351]':
+                      - 'link "fix: copy root patches/ dir into Docker builds" [ref=e354] [cursor=pointer]':
+                        - /url: /slopus/happy/commit/32b336643bed521b83245a305a53d6f5a8776f93
+                    - cell "Mar 23, 2026last week" [ref=e355]:
+                      - generic [ref=e356]: Mar 23, 2026last week
+                  - 'row "Dockerfile.webapp, (File) fix: copy root patches/ dir into Docker builds Mar 23, 2026last week" [ref=e357]':
+                    - cell "Dockerfile.webapp, (File)" [ref=e358]:
+                      - generic [ref=e359]:
+                        - img [ref=e360]
+                        - link "Dockerfile.webapp, (File)" [ref=e365] [cursor=pointer]:
+                          - /url: /slopus/happy/blob/main/Dockerfile.webapp
+                          - text: Dockerfile.webapp
+                    - 'cell "fix: copy root patches/ dir into Docker builds" [ref=e366]':
+                      - 'link "fix: copy root patches/ dir into Docker builds" [ref=e369] [cursor=pointer]':
+                        - /url: /slopus/happy/commit/32b336643bed521b83245a305a53d6f5a8776f93
+                    - cell "Mar 23, 2026last week" [ref=e370]:
+                      - generic [ref=e371]: Mar 23, 2026last week
+                  - row "LICENCE, (File) Add MIT License file Jan 22, 20263 months ago" [ref=e372]:
+                    - cell "LICENCE, (File)" [ref=e373]:
+                      - generic [ref=e374]:
+                        - img [ref=e375]
+                        - link "LICENCE, (File)" [ref=e380] [cursor=pointer]:
+                          - /url: /slopus/happy/blob/main/LICENCE
+                          - text: LICENCE
+                    - cell "Add MIT License file" [ref=e381]:
+                      - link "Add MIT License file" [ref=e384] [cursor=pointer]:
+                        - /url: /slopus/happy/commit/88459c45e083e9fcb17168e7e6cc92b370a68315
+                    - cell "Jan 22, 20263 months ago" [ref=e385]:
+                      - generic [ref=e386]: Jan 22, 20263 months ago
+                  - 'row "PRIVACY.md, (File) chore: move PRIVACY.md to repo root Mar 30, 20262 days ago" [ref=e387]':
+                    - cell "PRIVACY.md, (File)" [ref=e388]:
+                      - generic [ref=e389]:
+                        - img [ref=e390]
+                        - link "PRIVACY.md, (File)" [ref=e395] [cursor=pointer]:
+                          - /url: /slopus/happy/blob/main/PRIVACY.md
+                          - text: PRIVACY.md
+                    - 'cell "chore: move PRIVACY.md to repo root" [ref=e396]':
+                      - 'link "chore: move PRIVACY.md to repo root" [ref=e399] [cursor=pointer]':
+                        - /url: /slopus/happy/commit/361599bbe9cd6c2977a17d956cbab4b09cce1c46
+                    - cell "Mar 30, 20262 days ago" [ref=e400]:
+                      - generic [ref=e401]: Mar 30, 20262 days ago
+                  - 'row "README.md, (File) docs: consolidate contributing guidelines into single docs/CONTRIBUTI… Mar 30, 2026yesterday" [ref=e402]':
+                    - cell "README.md, (File)" [ref=e403]:
+                      - generic [ref=e404]:
+                        - img [ref=e405]
+                        - link "README.md, (File)" [ref=e410] [cursor=pointer]:
+                          - /url: /slopus/happy/blob/main/README.md
+                          - text: README.md
+                    - 'cell "docs: consolidate contributing guidelines into single docs/CONTRIBUTI…" [ref=e411]':
+                      - 'link "docs: consolidate contributing guidelines into single docs/CONTRIBUTI…" [ref=e414] [cursor=pointer]':
+                        - /url: /slopus/happy/commit/49eb1fcd1faca49669b386e1e9f32f7bc0a55d16
+                    - cell "Mar 30, 2026yesterday" [ref=e415]:
+                      - generic [ref=e416]: Mar 30, 2026yesterday
+                  - 'row "logo.png, (File) fix: restore logog Jan 28, 20263 months ago" [ref=e417]':
+                    - cell "logo.png, (File)" [ref=e418]:
+                      - generic [ref=e419]:
+                        - img [ref=e420]
+                        - link "logo.png, (File)" [ref=e425] [cursor=pointer]:
+                          - /url: /slopus/happy/blob/main/logo.png
+                          - text: logo.png
+                    - 'cell "fix: restore logog" [ref=e426]':
+                      - 'link "fix: restore logog" [ref=e429] [cursor=pointer]':
+                        - /url: /slopus/happy/commit/e294101717b49b2dc9ae1c2c7c372de824a1fe2e
+                    - cell "Jan 28, 20263 months ago" [ref=e430]:
+                      - generic [ref=e431]: Jan 28, 20263 months ago
+                  - row "package.json, (File) Add standalone app log receiver (happy-app-logs) Mar 22, 2026last week" [ref=e432]:
+                    - cell "package.json, (File)" [ref=e433]:
+                      - generic [ref=e434]:
+                        - img [ref=e435]
+                        - link "package.json, (File)" [ref=e440] [cursor=pointer]:
+                          - /url: /slopus/happy/blob/main/package.json
+                          - text: package.json
+                    - cell "Add standalone app log receiver (happy-app-logs)" [ref=e441]:
+                      - link "Add standalone app log receiver (happy-app-logs)" [ref=e444] [cursor=pointer]:
+                        - /url: /slopus/happy/commit/f345bc1481db945fa9f4474e83049e2b2353e103
+                    - cell "Mar 22, 2026last week" [ref=e445]:
+                      - generic [ref=e446]: Mar 22, 2026last week
+                  - 'row "yarn.lock, (File) fix: upgrade @react-native-picker/picker 2.11.1 → 2.11.4 Mar 26, 2026last week" [ref=e447]':
+                    - cell "yarn.lock, (File)" [ref=e448]:
+                      - generic [ref=e449]:
+                        - img [ref=e450]
+                        - link "yarn.lock, (File)" [ref=e455] [cursor=pointer]:
+                          - /url: /slopus/happy/blob/main/yarn.lock
+                          - text: yarn.lock
+                    - 'cell "fix: upgrade @react-native-picker/picker 2.11.1 → 2.11.4" [ref=e456]':
+                      - 'link "fix: upgrade @react-native-picker/picker 2.11.1 → 2.11.4" [ref=e459] [cursor=pointer]':
+                        - /url: /slopus/happy/commit/f3b009eb0cb2e573a73b60d8b3bad5dfe1be204f
+                    - cell "Mar 26, 2026last week" [ref=e460]:
+                      - generic [ref=e461]: Mar 26, 2026last week
+            - generic [ref=e463]:
+              - generic [ref=e464]:
+                - heading "Repository files navigation" [level=2] [ref=e465]
+                - navigation "Repository files" [ref=e466]:
+                  - list [ref=e467]:
+                    - listitem [ref=e468]:
+                      - link "README" [ref=e469] [cursor=pointer]:
+                        - /url: "#"
+                        - img [ref=e471]
+                        - generic [ref=e473]: README
+                    - listitem [ref=e474]:
+                      - link "Contributing" [ref=e475] [cursor=pointer]:
+                        - /url: "#"
+                        - img [ref=e477]
+                        - generic [ref=e479]: Contributing
+                    - listitem [ref=e480]:
+                      - link "MIT license" [ref=e481] [cursor=pointer]:
+                        - /url: "#"
+                        - img [ref=e483]
+                        - generic [ref=e485]: MIT license
+                - button "Outline" [ref=e486] [cursor=pointer]:
+                  - img [ref=e487]
+              - article [ref=e490]:
+                - link "Happy Coder" [ref=e492] [cursor=pointer]:
+                  - /url: /slopus/happy/blob/main/.github/logotype-dark.png
+                  - img "Happy Coder" [ref=e493]
+                - generic [ref=e494]:
+                  - heading "Mobile and Web Client for Claude Code & Codex" [level=1] [ref=e495]
+                  - 'link "Permalink: Mobile and Web Client for Claude Code & Codex" [ref=e496] [cursor=pointer]':
+                    - /url: "#--mobile-and-web-client-for-claude-code--codex"
+                    - img [ref=e497]
+                - generic [ref=e499]:
+                  - heading "Use Claude Code or Codex from anywhere with end-to-end encryption." [level=4] [ref=e500]
+                  - 'link "Permalink: Use Claude Code or Codex from anywhere with end-to-end encryption." [ref=e501] [cursor=pointer]':
+                    - /url: "#use-claude-code-or-codex-from-anywhere-with-end-to-end-encryption"
+                    - img [ref=e502]
+                - paragraph [ref=e505]:
+                  - link "📱 iOS App" [ref=e506] [cursor=pointer]:
+                    - /url: https://apps.apple.com/us/app/happy-claude-code-client/id6748571505
+                    - text: 📱
+                    - strong [ref=e507]: iOS App
+                  - text: •
+                  - link "🤖 Android App" [ref=e508] [cursor=pointer]:
+                    - /url: https://play.google.com/store/apps/details?id=com.ex3ndr.happy
+                    - text: 🤖
+                    - strong [ref=e509]: Android App
+                  - text: •
+                  - link "🌐 Web App" [ref=e510] [cursor=pointer]:
+                    - /url: https://app.happy.engineering
+                    - text: 🌐
+                    - strong [ref=e511]: Web App
+                  - text: •
+                  - link "🎥 See a Demo" [ref=e512] [cursor=pointer]:
+                    - /url: https://youtu.be/GCS0OG9QMSE
+                    - text: 🎥
+                    - strong [ref=e513]: See a Demo
+                  - text: •
+                  - link "📚 Documentation" [ref=e514] [cursor=pointer]:
+                    - /url: https://happy.engineering/docs/
+                    - text: 📚
+                    - strong [ref=e515]: Documentation
+                  - text: •
+                  - link "💬 Discord" [ref=e516] [cursor=pointer]:
+                    - /url: https://discord.gg/fX9WBAhyfD
+                    - text: 💬
+                    - strong [ref=e517]: Discord
+                - paragraph [ref=e518]:
+                  - link "github" [ref=e519] [cursor=pointer]:
+                    - /url: /slopus/happy/blob/main/.github/header.png
+                    - img "github" [ref=e520]
+                - generic [ref=e521]:
+                  - 'heading "Step 1: Download App" [level=3] [ref=e522]'
+                  - 'link "Permalink: Step 1: Download App" [ref=e523] [cursor=pointer]':
+                    - /url: "#step-1-download-app"
+                    - img [ref=e524]
+                - generic [ref=e526]:
+                  - link "appstore" [ref=e527] [cursor=pointer]:
+                    - /url: https://apps.apple.com/us/app/happy-claude-code-client/id6748571505
+                    - img "appstore" [ref=e528]
+                  - link "googleplay" [ref=e529] [cursor=pointer]:
+                    - /url: https://play.google.com/store/apps/details?id=com.ex3ndr.happy
+                    - img "googleplay" [ref=e530]
+                - generic [ref=e531]:
+                  - 'heading "Step 2: Install CLI on your computer" [level=3] [ref=e532]'
+                  - 'link "Permalink: Step 2: Install CLI on your computer" [ref=e533] [cursor=pointer]':
+                    - /url: "#step-2-install-cli-on-your-computer"
+                    - img [ref=e534]
+                - generic [ref=e536]:
+                  - generic [ref=e537]: npm install -g happy-coder
+                  - button "Copy" [ref=e539] [cursor=pointer]:
+                    - img [ref=e540]
+                - generic [ref=e543]:
+                  - 'heading "Step 3: Start using `happy` instead of `claude` or `codex`" [level=3] [ref=e544]'
+                  - 'link "Permalink: Step 3: Start using `happy` instead of `claude` or `codex`" [ref=e545] [cursor=pointer]':
+                    - /url: "#step-3-start-using-happy-instead-of-claude-or-codex"
+                    - img [ref=e546]
+                - generic [ref=e548]:
+                  - generic [ref=e549]:
+                    - generic [ref=e550]: "# Instead of: claude"
+                    - generic [ref=e551]: "# Use: happy"
+                    - text: happy
+                    - generic [ref=e552]: "# Instead of: codex"
+                    - generic [ref=e553]: "# Use: happy codex"
+                    - text: happy codex
+                  - button "Copy" [ref=e555] [cursor=pointer]:
+                    - img [ref=e556]
+                - link "Happy Coder" [ref=e560] [cursor=pointer]:
+                  - /url: /slopus/happy/blob/main/.github/mascot.png
+                  - img "Happy Coder" [ref=e561]
+                - generic [ref=e562]:
+                  - heading "How does it work?" [level=2] [ref=e563]
+                  - 'link "Permalink: How does it work?" [ref=e564] [cursor=pointer]':
+                    - /url: "#how-does-it-work"
+                    - img [ref=e565]
+                - paragraph [ref=e567]:
+                  - text: On your computer, run
+                  - code [ref=e568]: happy
+                  - text: instead of
+                  - code [ref=e569]: claude
+                  - text: or
+                  - code [ref=e570]: happy codex
+                  - text: instead of
+                  - code [ref=e571]: codex
+                  - text: to start your AI through our wrapper. When you want to control your coding agent from your phone, it restarts the session in remote mode. To switch back to your computer, just press any key on your keyboard.
+                - generic [ref=e572]:
+                  - heading "🔥 Why Happy Coder?" [level=2] [ref=e573]
+                  - 'link "Permalink: 🔥 Why Happy Coder?" [ref=e574] [cursor=pointer]':
+                    - /url: "#-why-happy-coder"
+                    - img [ref=e575]
+                - list [ref=e577]:
+                  - listitem [ref=e578]:
+                    - text: 📱
+                    - strong [ref=e579]: Mobile access to Claude Code and Codex
+                    - text: "- Check what your AI is building while away from your desk"
+                  - listitem [ref=e580]:
+                    - text: 🔔
+                    - strong [ref=e581]: Push notifications
+                    - text: "- Get alerted when Claude Code and Codex needs permission or encounters errors"
+                  - listitem [ref=e582]:
+                    - text: ⚡
+                    - strong [ref=e583]: Switch devices instantly
+                    - text: "- Take control from phone or desktop with one keypress"
+                  - listitem [ref=e584]:
+                    - text: 🔐
+                    - strong [ref=e585]: End-to-end encrypted
+                    - text: "- Your code never leaves your devices unencrypted"
+                  - listitem [ref=e586]:
+                    - text: 🛠️
+                    - strong [ref=e587]: Open source
+                    - text: "- Audit the code yourself. No telemetry, no tracking"
+                - generic [ref=e588]:
+                  - heading "📦 Project Components" [level=2] [ref=e589]
+                  - 'link "Permalink: 📦 Project Components" [ref=e590] [cursor=pointer]':
+                    - /url: "#-project-components"
+                    - img [ref=e591]
+                - list [ref=e593]:
+                  - listitem [ref=e594]:
+                    - strong [ref=e595]:
+                      - link "Happy App" [ref=e596] [cursor=pointer]:
+                        - /url: https://github.com/slopus/happy/tree/main/packages/happy-app
+                    - text: "- Web UI + mobile client (Expo)"
+                  - listitem [ref=e597]:
+                    - strong [ref=e598]:
+                      - link "Happy CLI" [ref=e599] [cursor=pointer]:
+                        - /url: https://github.com/slopus/happy/tree/main/packages/happy-cli
+                    - text: "- Command-line interface for Claude Code and Codex"
+                  - listitem [ref=e600]:
+                    - strong [ref=e601]:
+                      - link "Happy Agent" [ref=e602] [cursor=pointer]:
+                        - /url: https://github.com/slopus/happy/tree/main/packages/happy-agent
+                    - text: "- Remote agent control CLI (create, send, monitor sessions)"
+                  - listitem [ref=e603]:
+                    - strong [ref=e604]:
+                      - link "Happy Server" [ref=e605] [cursor=pointer]:
+                        - /url: https://github.com/slopus/happy/tree/main/packages/happy-server
+                    - text: "- Backend server for encrypted sync"
+                - generic [ref=e606]:
+                  - heading "🏠 Who We Are" [level=2] [ref=e607]
+                  - 'link "Permalink: 🏠 Who We Are" [ref=e608] [cursor=pointer]':
+                    - /url: "#-who-we-are"
+                    - img [ref=e609]
+                - paragraph [ref=e611]: We're engineers scattered across Bay Area coffee shops and hacker houses, constantly checking how our AI coding agents are progressing on our pet projects during lunch breaks. Happy Coder was born from the frustration of not being able to peek at our AI coding tools building our side hustles while we're away from our keyboards. We believe the best tools come from scratching your own itch and sharing with the community.
+                - generic [ref=e612]:
+                  - heading "📚 Documentation & Contributing" [level=2] [ref=e613]
+                  - 'link "Permalink: 📚 Documentation & Contributing" [ref=e614] [cursor=pointer]':
+                    - /url: "#-documentation--contributing"
+                    - img [ref=e615]
+                - list [ref=e617]:
+                  - listitem [ref=e618]:
+                    - strong [ref=e619]:
+                      - link "Documentation Website" [ref=e620] [cursor=pointer]:
+                        - /url: https://happy.engineering/docs/
+                    - text: "- Learn how to use Happy Coder effectively"
+                  - listitem [ref=e621]:
+                    - strong [ref=e622]:
+                      - link "Contributing Guide" [ref=e623] [cursor=pointer]:
+                        - /url: /slopus/happy/blob/main/docs/CONTRIBUTING.md
+                    - text: "- How to contribute, PR guidelines, and development setup"
+                  - listitem [ref=e624]:
+                    - strong [ref=e625]:
+                      - link "Edit docs at github.com/slopus/slopus.github.io" [ref=e626] [cursor=pointer]:
+                        - /url: https://github.com/slopus/slopus.github.io
+                    - text: "- Help improve our documentation and guides"
+                - generic [ref=e627]:
+                  - heading "License" [level=2] [ref=e628]
+                  - 'link "Permalink: License" [ref=e629] [cursor=pointer]':
+                    - /url: "#license"
+                    - img [ref=e630]
+                - paragraph [ref=e632]:
+                  - text: MIT License - see
+                  - link "LICENSE" [ref=e633] [cursor=pointer]:
+                    - /url: /slopus/happy/blob/main/LICENSE
+                  - text: for details.
+        - generic [ref=e637]:
+          - generic [ref=e640]:
+            - heading "About" [level=2] [ref=e641]
+            - paragraph [ref=e642]: Mobile and Web client for Codex and Claude Code, with realtime voice, encryption and fully featured
+            - generic [ref=e643]:
+              - img [ref=e644]
+              - link "happy.engineering" [ref=e647] [cursor=pointer]:
+                - /url: https://happy.engineering
+            - heading "Topics" [level=3] [ref=e648]
+            - generic [ref=e650]:
+              - link "hacktoberfest" [ref=e651] [cursor=pointer]:
+                - /url: /topics/hacktoberfest
+              - link "codex" [ref=e652] [cursor=pointer]:
+                - /url: /topics/codex
+              - link "claude-desktop" [ref=e653] [cursor=pointer]:
+                - /url: /topics/claude-desktop
+              - link "claude-code" [ref=e654] [cursor=pointer]:
+                - /url: /topics/claude-code
+              - link "codex-cli" [ref=e655] [cursor=pointer]:
+                - /url: /topics/codex-cli
+              - link "claude-mobile" [ref=e656] [cursor=pointer]:
+                - /url: /topics/claude-mobile
+            - heading "Resources" [level=3] [ref=e657]
+            - link "Readme" [ref=e659] [cursor=pointer]:
+              - /url: "#readme-ov-file"
+              - img [ref=e660]
+              - text: Readme
+            - heading "License" [level=3] [ref=e662]
+            - link "MIT license" [ref=e664] [cursor=pointer]:
+              - /url: "#MIT-1-ov-file"
+              - img [ref=e665]
+              - text: MIT license
+            - heading "Contributing" [level=3] [ref=e667]
+            - link "Contributing" [ref=e669] [cursor=pointer]:
+              - /url: "#contributing-ov-file"
+              - img [ref=e670]
+              - text: Contributing
+            - link "Activity" [ref=e673] [cursor=pointer]:
+              - /url: /slopus/happy/activity
+              - img [ref=e674]
+              - text: Activity
+            - link "Custom properties" [ref=e677] [cursor=pointer]:
+              - /url: /slopus/happy/custom-properties
+              - img [ref=e678]
+              - text: Custom properties
+            - heading "Stars" [level=3] [ref=e680]
+            - link "16.8k stars" [ref=e682] [cursor=pointer]:
+              - /url: /slopus/happy/stargazers
+              - img [ref=e683]
+              - strong [ref=e685]: 16.8k
+              - text: stars
+            - heading "Watchers" [level=3] [ref=e686]
+            - link "66 watching" [ref=e688] [cursor=pointer]:
+              - /url: /slopus/happy/watchers
+              - img [ref=e689]
+              - strong [ref=e691]: "66"
+              - text: watching
+            - heading "Forks" [level=3] [ref=e692]
+            - link "1.3k forks" [ref=e694] [cursor=pointer]:
+              - /url: /slopus/happy/forks
+              - img [ref=e695]
+              - strong [ref=e697]: 1.3k
+              - text: forks
+            - link "Report repository" [ref=e699] [cursor=pointer]:
+              - /url: /contact/report-content?content_url=https%3A%2F%2Fgithub.com%2Fslopus%2Fhappy&report=slopus+%28user%29
+          - generic [ref=e701]:
+            - heading "Releases" [level=2] [ref=e702]:
+              - link "Releases" [ref=e703] [cursor=pointer]:
+                - /url: /slopus/happy/releases
+            - link "2 tags" [ref=e704] [cursor=pointer]:
+              - /url: /slopus/happy/tags
+              - img [ref=e705]
+              - text: 2 tags
+          - generic [ref=e708]:
+            - heading "Contributors 47" [level=2] [ref=e709]:
+              - link "Contributors 47" [ref=e710] [cursor=pointer]:
+                - /url: /slopus/happy/graphs/contributors
+                - text: Contributors
+                - generic "47" [ref=e711]
+            - list [ref=e712]:
+              - listitem [ref=e713]:
+                - link "@ex3ndr" [ref=e714] [cursor=pointer]:
+                  - /url: https://github.com/ex3ndr
+                  - img "@ex3ndr" [ref=e715]
+              - listitem [ref=e716]:
+                - link "@bra1nDump" [ref=e717] [cursor=pointer]:
+                  - /url: https://github.com/bra1nDump
+                  - img "@bra1nDump" [ref=e718]
+              - listitem [ref=e719]:
+                - link "@claude" [ref=e720] [cursor=pointer]:
+                  - /url: https://github.com/claude
+                  - img "@claude" [ref=e721]
+              - listitem [ref=e722]:
+                - link "@ahundt" [ref=e723] [cursor=pointer]:
+                  - /url: https://github.com/ahundt
+                  - img "@ahundt" [ref=e724]
+              - listitem [ref=e725]:
+                - link "@GrocerPublishAgent" [ref=e726] [cursor=pointer]:
+                  - /url: https://github.com/GrocerPublishAgent
+                  - img "@GrocerPublishAgent" [ref=e727]
+              - listitem [ref=e728]:
+                - link "@happy-otter" [ref=e729] [cursor=pointer]:
+                  - /url: https://github.com/happy-otter
+                  - img "@happy-otter" [ref=e730]
+              - listitem [ref=e731]:
+                - link "@borisandcrispin" [ref=e732] [cursor=pointer]:
+                  - /url: https://github.com/borisandcrispin
+                  - img "@borisandcrispin" [ref=e733]
+              - listitem [ref=e734]:
+                - link "@Scoteezy" [ref=e735] [cursor=pointer]:
+                  - /url: https://github.com/Scoteezy
+                  - img "@Scoteezy" [ref=e736]
+              - listitem [ref=e737]:
+                - link "@leeroybrun" [ref=e738] [cursor=pointer]:
+                  - /url: https://github.com/leeroybrun
+                  - img "@leeroybrun" [ref=e739]
+              - listitem [ref=e740]:
+                - link "@CodingCanuck" [ref=e741] [cursor=pointer]:
+                  - /url: https://github.com/CodingCanuck
+                  - img "@CodingCanuck" [ref=e742]
+              - listitem [ref=e743]:
+                - link "@tiann" [ref=e744] [cursor=pointer]:
+                  - /url: https://github.com/tiann
+                  - img "@tiann" [ref=e745]
+              - listitem [ref=e746]:
+                - link "@mrexodia" [ref=e747] [cursor=pointer]:
+                  - /url: https://github.com/mrexodia
+                  - img "@mrexodia" [ref=e748]
+              - listitem [ref=e749]:
+                - link "@dvlkv" [ref=e750] [cursor=pointer]:
+                  - /url: https://github.com/dvlkv
+                  - img "@dvlkv" [ref=e751]
+              - listitem [ref=e752]:
+                - link "@kmizzi" [ref=e753] [cursor=pointer]:
+                  - /url: https://github.com/kmizzi
+                  - img "@kmizzi" [ref=e754]
+            - link "+ 33 contributors" [ref=e756] [cursor=pointer]:
+              - /url: /slopus/happy/graphs/contributors
+          - generic [ref=e758]:
+            - heading "Languages" [level=2] [ref=e759]
+            - list [ref=e766]:
+              - listitem [ref=e767]:
+                - link "TypeScript 97.3%" [ref=e768] [cursor=pointer]:
+                  - /url: /slopus/happy/search?l=typescript
+                  - img [ref=e769]
+                  - generic [ref=e771]: TypeScript
+                  - generic [ref=e772]: 97.3%
+              - listitem [ref=e773]:
+                - link "JavaScript 2.5%" [ref=e774] [cursor=pointer]:
+                  - /url: /slopus/happy/search?l=javascript
+                  - img [ref=e775]
+                  - generic [ref=e777]: JavaScript
+                  - generic [ref=e778]: 2.5%
+              - listitem [ref=e779]:
+                - link "Shell 0.1%" [ref=e780] [cursor=pointer]:
+                  - /url: /slopus/happy/search?l=shell
+                  - img [ref=e781]
+                  - generic [ref=e783]: Shell
+                  - generic [ref=e784]: 0.1%
+              - listitem [ref=e785]:
+                - link "CSS 0.1%" [ref=e786] [cursor=pointer]:
+                  - /url: /slopus/happy/search?l=css
+                  - img [ref=e787]
+                  - generic [ref=e789]: CSS
+                  - generic [ref=e790]: 0.1%
+              - listitem [ref=e791]:
+                - link "HTML 0.0%" [ref=e792] [cursor=pointer]:
+                  - /url: /slopus/happy/search?l=html
+                  - img [ref=e793]
+                  - generic [ref=e795]: HTML
+                  - generic [ref=e796]: 0.0%
+              - listitem [ref=e797]:
+                - link "Dockerfile 0.0%" [ref=e798] [cursor=pointer]:
+                  - /url: /slopus/happy/search?l=dockerfile
+                  - img [ref=e799]
+                  - generic [ref=e801]: Dockerfile
+                  - generic [ref=e802]: 0.0%
+  - contentinfo [ref=e804]:
+    - heading "Footer" [level=2] [ref=e805]
+    - generic [ref=e806]:
+      - generic [ref=e807]:
+        - link "GitHub Homepage" [ref=e808] [cursor=pointer]:
+          - /url: https://github.com
+          - img [ref=e809]
+        - generic [ref=e811]: © 2026 GitHub, Inc.
+      - navigation "Footer" [ref=e812]:
+        - heading "Footer navigation" [level=3] [ref=e813]
+        - list "Footer navigation" [ref=e814]:
+          - listitem [ref=e815]:
+            - link "Terms" [ref=e816] [cursor=pointer]:
+              - /url: https://docs.github.com/site-policy/github-terms/github-terms-of-service
+          - listitem [ref=e817]:
+            - link "Privacy" [ref=e818] [cursor=pointer]:
+              - /url: https://docs.github.com/site-policy/privacy-policies/github-privacy-statement
+          - listitem [ref=e819]:
+            - link "Security" [ref=e820] [cursor=pointer]:
+              - /url: https://github.com/security
+          - listitem [ref=e821]:
+            - link "Status" [ref=e822] [cursor=pointer]:
+              - /url: https://www.githubstatus.com/
+          - listitem [ref=e823]:
+            - link "Community" [ref=e824] [cursor=pointer]:
+              - /url: https://github.community/
+          - listitem [ref=e825]:
+            - link "Docs" [ref=e826] [cursor=pointer]:
+              - /url: https://docs.github.com/
+          - listitem [ref=e827]:
+            - link "Contact" [ref=e828] [cursor=pointer]:
+              - /url: https://support.github.com?tags=dotcom-footer
+          - listitem [ref=e829]:
+            - button "Manage cookies" [ref=e831] [cursor=pointer]
+          - listitem [ref=e832]:
+            - button "Do not share my personal information" [ref=e834] [cursor=pointer]
