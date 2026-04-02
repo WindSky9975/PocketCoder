@@ -1,0 +1,4 @@
+interface:
+  display_name: "Windows Desktop Control"
+  short_description: "Build and repair PocketCoder Windows control boundaries."
+  default_prompt: "Use -desktop-control to create or repair PocketCoder Windows control boundaries."

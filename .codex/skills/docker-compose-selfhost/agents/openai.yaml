@@ -1,0 +1,4 @@
+interface:
+  display_name: "Docker Compose Selfhost"
+  short_description: "Build PocketCoder selfhost Compose scaffolds."
+  default_prompt: "Use -compose-selfhost to create or repair PocketCoder selfhost Compose scaffolds."

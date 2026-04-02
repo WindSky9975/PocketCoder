@@ -1,0 +1,4 @@
+interface:
+  display_name: "Next.js PWA Mobile"
+  short_description: "Build and repair the PocketCoder mobile PWA shell."
+  default_prompt: "Use $nextjs-pwa-mobile to create or repair the PocketCoder mobile web app skeleton."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Protocol Schema Design"
+  short_description: "Design and repair the PocketCoder protocol package."
+  default_prompt: "Use $protocol-schema-design to design or repair the PocketCoder shared protocol contracts."

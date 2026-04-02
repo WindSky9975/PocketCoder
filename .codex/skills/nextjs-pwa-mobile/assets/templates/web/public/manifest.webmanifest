@@ -1,0 +1,12 @@
+{
+  "name": "PocketCoder",
+  "short_name": "PocketCoder",
+  "description": "Mobile-first paired coding shell for realtime desktop sessions.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#07111f",
+  "theme_color": "#0d9488",
+  "lang": "en",
+  "icons": []
+}

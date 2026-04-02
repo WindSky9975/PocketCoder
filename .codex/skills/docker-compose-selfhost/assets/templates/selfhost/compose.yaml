@@ -1,0 +1,32 @@
+services:
+  relay:
+    container_name: pocketcoder-relay
+    build:
+      context: .
+      dockerfile: infra/docker/relay.Dockerfile
+    env_file:
+      - .env
+    environment:
+      POCKETCODER_RELAY_HOST: ${POCKETCODER_RELAY_HOST:-0.0.0.0}
+      POCKETCODER_RELAY_PORT: ${POCKETCODER_RELAY_PORT:-8080}
+      POCKETCODER_PUBLIC_BASE_URL: ${POCKETCODER_PUBLIC_BASE_URL:-http://localhost:8080}
+      POCKETCODER_RELAY_DB_PATH: ${POCKETCODER_RELAY_DB_PATH:-/var/lib/pocketcoder/relay.sqlite}
+      POCKETCODER_LOG_LEVEL: ${POCKETCODER_LOG_LEVEL:-info}
+      POCKETCODER_PAIRING_TOKEN_TTL_SECONDS: ${POCKETCODER_PAIRING_TOKEN_TTL_SECONDS:-300}
+      POCKETCODER_EVENT_REPLAY_TTL_SECONDS: ${POCKETCODER_EVENT_REPLAY_TTL_SECONDS:-120}
+    ports:
+      - "${POCKETCODER_RELAY_PORT:-8080}:${POCKETCODER_RELAY_PORT:-8080}"
+    volumes:
+      - relay-data:/var/lib/pocketcoder
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:${POCKETCODER_RELAY_PORT:-8080}/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    command: ["node", "apps/relay/dist/server.js"]
+
+volumes:
+  relay-data:
+    name: pocketcoder-relay-data

@@ -1,0 +1,4 @@
+interface:
+  display_name: "E2EE Device Pairing"
+  short_description: "Build and repair PocketCoder pairing and E2EE boundaries."
+  default_prompt: "Use -device-pairing to create or repair PocketCoder pairing and E2EE layers."

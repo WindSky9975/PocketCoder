@@ -1,0 +1,4 @@
+interface:
+  display_name: "Node PTY Agentd"
+  short_description: "Build and repair the PocketCoder desktop agent shell."
+  default_prompt: "Use $node-pty-agentd to create or repair the PocketCoder desktop agent skeleton."

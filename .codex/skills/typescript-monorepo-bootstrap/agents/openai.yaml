@@ -1,0 +1,4 @@
+interface:
+  display_name: "TypeScript Monorepo Bootstrap"
+  short_description: "Bootstrap and repair the PocketCoder monorepo scaffold."
+  default_prompt: "Use $typescript-monorepo-bootstrap to initialize or repair the PocketCoder monorepo skeleton."

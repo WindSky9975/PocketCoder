@@ -1,0 +1,4 @@
+interface:
+  display_name: "QA Realtime Testing"
+  short_description: "Build PocketCoder test and regression layers."
+  default_prompt: "Use $qa-realtime-testing to create or repair PocketCoder test layers and regression scaffolds."

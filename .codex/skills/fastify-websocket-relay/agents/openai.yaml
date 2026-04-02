@@ -1,0 +1,4 @@
+interface:
+  display_name: "Fastify WebSocket Relay"
+  short_description: "Build and repair the PocketCoder relay service."
+  default_prompt: "Use $fastify-websocket-relay to create or repair the PocketCoder relay service skeleton."

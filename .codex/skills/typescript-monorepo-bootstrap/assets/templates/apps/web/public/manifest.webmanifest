@@ -1,0 +1,9 @@
+{
+  "name": "PocketCoder",
+  "short_name": "PocketCoder",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f3ee",
+  "theme_color": "#1f2933",
+  "description": "PocketCoder mobile-first web shell."
+}
