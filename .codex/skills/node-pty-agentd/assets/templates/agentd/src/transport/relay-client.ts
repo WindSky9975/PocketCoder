@@ -1,6 +1,8 @@
+﻿import type { AgentdOutboundEvent } from "./event-publisher.js";
+
 export interface RelayClient {
   connect(): Promise<void>;
-  publish(message: Record<string, unknown>): Promise<void>;
+  publish(message: AgentdOutboundEvent): Promise<void>;
   disconnect(): Promise<void>;
 }
 

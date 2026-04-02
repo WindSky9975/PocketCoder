@@ -1,0 +1,22 @@
+{
+  "name": "@pocketcoder/agentd",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "npm --prefix ../.. --workspace @pocketcoder/protocol run build && tsx watch src/cli/index.ts",
+    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && npm --prefix ../.. --workspace @pocketcoder/protocol run build && tsc -p tsconfig.build.json",
+    "lint": "eslint src tests",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --experimental-strip-types --test --experimental-test-isolation=none tests/**/*.spec.ts"
+  },
+  "dependencies": {
+    "@pocketcoder/protocol": "0.1.0",
+    "node-pty": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "tsx": "^4.19.2"
+  }
+}

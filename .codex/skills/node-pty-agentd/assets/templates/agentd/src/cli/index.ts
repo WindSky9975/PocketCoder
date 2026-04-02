@@ -1,9 +1,10 @@
-import { createAgentdRuntime } from "../bootstrap.js";
+﻿import { createAgentdRuntime } from "../bootstrap.js";
 import { issuePairingToken } from "../security/pairing.js";
 
 export async function startCli(argv = process.argv.slice(2)): Promise<void> {
   if (argv[0] === "auth") {
-    console.log(issuePairingToken());
+    const deviceId = process.env.POCKETCODER_DEVICE_ID ?? "desktop-device";
+    console.log(issuePairingToken(deviceId));
     return;
   }
 

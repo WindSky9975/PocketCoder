@@ -1,9 +1,9 @@
-import {
+﻿import {
   createInitialControlState,
   markDesktopControlRecovered,
   type DesktopControlSnapshot,
-} from "./control-state";
-import type { InputDetector, LocalInputSignal } from "./input-detector";
+} from "./control-state.js";
+import type { InputDetector, LocalInputSignal } from "./input-detector.js";
 
 export interface DesktopControlBoundary {
   getSnapshot(): DesktopControlSnapshot;
@@ -17,7 +17,7 @@ export function createDesktopControlBoundary(
 ): DesktopControlBoundary {
   let snapshot = createInitialControlState(sessionId);
 
-  detector?.subscribe((signal) => {
+  detector?.subscribe((signal: LocalInputSignal) => {
     if (signal.sessionId === sessionId) {
       snapshot = markDesktopControlRecovered(snapshot, "local-input");
     }

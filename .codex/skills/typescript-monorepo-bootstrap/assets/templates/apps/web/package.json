@@ -1,23 +1,27 @@
 {
   "name": "@pocketcoder/web",
   "private": true,
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "lint": "eslint .",
+    "dev": "npm --prefix ../.. --workspace @pocketcoder/protocol run build && next dev",
+    "build": "npm --prefix ../.. --workspace @pocketcoder/protocol run build && next build",
+    "lint": "eslint src next.config.ts",
     "typecheck": "tsc --noEmit",
-    "test": "node --test"
+    "test": "npm --prefix ../.. --workspace @pocketcoder/protocol run build && node --experimental-strip-types --test --experimental-test-isolation=none src/tests/**/*.spec.ts src/tests/**/*.smoke.ts"
   },
   "dependencies": {
-    "@pocketcoder/protocol": "workspace:*",
+    "@pocketcoder/protocol": "0.1.0",
     "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@types/node": "^22.10.1",
-    "@types/react": "^19.0.2",
-    "@types/react-dom": "^19.0.2"
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^15.0.0",
+    "typescript": "^5.0.0"
   }
 }

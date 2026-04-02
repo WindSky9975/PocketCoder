@@ -1,0 +1,56 @@
+
+> dev
+> node scripts/dev.mjs
+
+[dev] relay preferred port 8787 is in use; using 8789 instead
+[dev] web will use preferred port 3000
+[dev] web will be available at http://127.0.0.1:3000
+[dev] waiting for relay health at http://127.0.0.1:8789/health
+
+> @pocketcoder/web@0.1.0 dev
+> npm --prefix ../.. --workspace @pocketcoder/protocol run build && next dev
+
+
+> @pocketcoder/relay@0.1.0 dev
+> npm --prefix ../.. --workspace @pocketcoder/protocol run build && tsx watch src/server.ts
+
+
+> @pocketcoder/protocol@0.1.0 build
+> tsc -p tsconfig.json
+
+
+> @pocketcoder/protocol@0.1.0 build
+> tsc -p tsconfig.json
+
+{"level":30,"time":1775132637799,"pid":8224,"hostname":"WindSkyPC","msg":"Server listening at http://127.0.0.1:8789"}
+{"level":30,"time":1775132638055,"pid":8224,"hostname":"WindSkyPC","reqId":"req-1","req":{"method":"GET","url":"/health","host":"127.0.0.1:8789","remoteAddress":"127.0.0.1","remotePort":41444},"msg":"incoming request"}
+{"level":30,"time":1775132638060,"pid":8224,"hostname":"WindSkyPC","reqId":"req-1","res":{"statusCode":200},"responseTime":4.119300000369549,"msg":"request completed"}
+[dev] relay is healthy; starting agentd
+
+> @pocketcoder/agentd@0.1.0 dev
+> npm --prefix ../.. --workspace @pocketcoder/protocol run build && tsx watch src/cli/index.ts
+
+   ▲ Next.js 15.5.14
+   - Local:        http://localhost:3000
+   - Network:      http://100.93.59.121:3000
+
+ ✓ Starting...
+
+> @pocketcoder/protocol@0.1.0 build
+> tsc -p tsconfig.json
+
+[agentd] starting agentd runtime {
+  paths: {
+    runtimeRoot: 'D:\\develop\\study\\AI\\PocketCoder\\apps\\agentd\\.agentd'
+  },
+  deviceId: 'desktop-device'
+}
+{"level":30,"time":1775132641267,"pid":8224,"hostname":"WindSkyPC","reqId":"req-2","req":{"method":"GET","url":"/ws?deviceId=desktop-device&role=desktop","host":"127.0.0.1:8789","remoteAddress":"127.0.0.1","remotePort":46601},"msg":"incoming request"}
+[agentd] start codex PTY { command: 'codex' }
+
+   We detected TypeScript in your project and reconfigured your tsconfig.json file for you.
+   The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:
+
+   	- include was updated to add '.next-dev-3000/types/**/*.ts'
+
+ ✓ Ready in 5.4s

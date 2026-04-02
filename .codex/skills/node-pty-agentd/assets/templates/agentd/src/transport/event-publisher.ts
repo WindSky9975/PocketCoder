@@ -1,7 +1,12 @@
-import type { RelayClient } from "./relay-client.js";
+﻿import type { RelayClient } from "./relay-client.js";
+
+export interface AgentdOutboundEvent {
+  type: string;
+  payload: Record<string, unknown>;
+}
 
 export interface AgentdEventPublisher {
-  publish(event: Record<string, unknown>): Promise<void>;
+  publish(event: AgentdOutboundEvent): Promise<void>;
 }
 
 export function createEventPublisher(relayClient: RelayClient): AgentdEventPublisher {

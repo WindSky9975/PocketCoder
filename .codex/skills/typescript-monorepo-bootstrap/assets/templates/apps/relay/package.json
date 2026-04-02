@@ -1,17 +1,19 @@
 {
   "name": "@pocketcoder/relay",
   "private": true,
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "build": "tsc -p tsconfig.json",
-    "lint": "eslint .",
+    "dev": "npm --prefix ../.. --workspace @pocketcoder/protocol run build && tsx watch src/server.ts",
+    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && npm --prefix ../.. --workspace @pocketcoder/protocol run build && tsc -p tsconfig.build.json",
+    "lint": "eslint src tests",
     "typecheck": "tsc --noEmit",
-    "test": "node --test"
+    "test": "npm run build && node --experimental-strip-types --test --experimental-test-isolation=none tests/**/*.spec.ts"
   },
   "dependencies": {
     "@fastify/websocket": "^11.0.1",
-    "@pocketcoder/protocol": "workspace:*",
+    "@pocketcoder/protocol": "0.1.0",
     "fastify": "^5.1.0"
   },
   "devDependencies": {
