@@ -8,6 +8,7 @@ import {
   protocolEventEnvelopeSchema,
   protocolResponseEnvelopeSchema,
   pairingInitEnvelopeSchema,
+  sessionDirectoryResponseSchema,
   sessionStateChangedEnvelopeSchema,
 } from "../../dist/index.js";
 
@@ -105,5 +106,22 @@ describe("protocol schemas", () => {
 
     assert.equal(parsed.type, "ErrorEnvelope");
     assert.equal(parsed.payload.retryable, false);
+  });
+
+  it("parses session directory responses through the shared session schema", () => {
+    const parsed = sessionDirectoryResponseSchema.parse({
+      sessions: [
+        {
+          sessionId: "session-1",
+          provider: "codex",
+          status: "running",
+          currentTask: "inspect relay session index",
+          lastActivityAt: "2026-04-02T10:00:00.000Z",
+        },
+      ],
+    });
+
+    assert.equal(parsed.sessions[0]?.sessionId, "session-1");
+    assert.equal(parsed.sessions[0]?.provider, "codex");
   });
 });

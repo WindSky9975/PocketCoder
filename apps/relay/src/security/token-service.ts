@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, createPublicKey, verify } from "node:crypto";
 
 import { RelayProtocolError } from "../infra/protocol-error.js";
 import {
@@ -17,85 +17,100 @@ export interface PairingTokenRecord {
 export interface PairingTokenInspection {
   accepted: boolean;
   desktopDeviceId?: string;
+  desktopPublicKey?: string;
   expiresAt?: string;
-  reason?: "invalid" | "expired" | "used";
+  reason?: "invalid" | "expired" | "used" | "untrusted";
 }
 
 interface ParsedPairingToken {
   desktopDeviceId: string;
-  expiresAt: string | null;
-}
-
-function decodeStructuredToken(token: string): ParsedPairingToken | null {
-  if (!token.startsWith("pair.v1.")) {
-    return null;
-  }
-
-  const encodedPayload = token.slice("pair.v1.".length);
-  try {
-    const raw = Buffer.from(encodedPayload, "base64url").toString("utf8");
-    const payload = JSON.parse(raw) as {
-      desktopDeviceId?: unknown;
-      expiresAt?: unknown;
-    };
-
-    if (typeof payload.desktopDeviceId !== "string") {
-      return null;
-    }
-
-    if (typeof payload.expiresAt !== "string") {
-      return null;
-    }
-
-    return {
-      desktopDeviceId: payload.desktopDeviceId.trim(),
-      expiresAt: payload.expiresAt,
-    };
-  } catch {
-    return null;
-  }
-}
-
-function decodeLegacyToken(token: string): ParsedPairingToken | null {
-  const match = /^pair-(.+)-placeholder$/.exec(token);
-  if (!match?.[1]) {
-    return null;
-  }
-
-  return {
-    desktopDeviceId: match[1],
-    expiresAt: null,
-  };
-}
-
-function parsePairingToken(token: string): ParsedPairingToken | null {
-  return decodeStructuredToken(token) ?? decodeLegacyToken(token);
+  desktopPublicKey: string;
+  expiresAt: string;
+  signature: string;
+  payloadJson: string;
 }
 
 function hashPairingToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
+function verifyPairingTokenSignature(args: {
+  publicKey: string;
+  payload: string;
+  signature: string;
+}): boolean {
+  try {
+    return verify(
+      "sha256",
+      Buffer.from(args.payload, "utf8"),
+      createPublicKey(args.publicKey),
+      Buffer.from(args.signature, "base64url"),
+    );
+  } catch {
+    return false;
+  }
+}
+
+function parseSignedPairingToken(token: string): ParsedPairingToken | null {
+  if (!token.startsWith("pair.v1.")) {
+    return null;
+  }
+
+  const parts = token.split(".");
+  const encodedPayload = parts[2];
+  const signature = parts[3];
+  if (parts.length !== 4 || typeof encodedPayload !== "string" || typeof signature !== "string") {
+    return null;
+  }
+
+  try {
+    const payloadJson = Buffer.from(encodedPayload, "base64url").toString("utf8");
+    const payload = JSON.parse(payloadJson) as {
+      desktopDeviceId?: unknown;
+      desktopPublicKey?: unknown;
+      expiresAt?: unknown;
+      tokenId?: unknown;
+    };
+
+    if (
+      typeof payload.desktopDeviceId !== "string" ||
+      typeof payload.desktopPublicKey !== "string" ||
+      typeof payload.expiresAt !== "string" ||
+      typeof payload.tokenId !== "string" ||
+      typeof signature !== "string" ||
+      signature.length < 16
+    ) {
+      return null;
+    }
+
+    return {
+      desktopDeviceId: payload.desktopDeviceId.trim(),
+      desktopPublicKey: payload.desktopPublicKey,
+      expiresAt: payload.expiresAt,
+      signature,
+      payloadJson,
+    };
+  } catch {
+    return null;
+  }
+}
+
 function ensurePairingRecord(
   repository: PairingRecordRepository,
   token: string,
-  nowIso: string,
-): PairingRecord | null {
+  desktopPublicKey: string,
+  desktopDeviceId: string,
+  expiresAt: string,
+): PairingRecord {
   const tokenHash = hashPairingToken(token);
   const existing = repository.get(tokenHash);
   if (existing) {
     return existing;
   }
 
-  const parsed = parsePairingToken(token);
-  if (!parsed) {
-    return null;
-  }
-
-  const expiresAt =
-    parsed.expiresAt ?? new Date(Date.parse(nowIso) + 5 * 60 * 1000).toISOString();
-
-  return repository.save(createEmptyPairingRecord(tokenHash, parsed.desktopDeviceId, expiresAt));
+  return repository.save(
+    createEmptyPairingRecord(tokenHash, desktopDeviceId, desktopPublicKey, expiresAt),
+  );
 }
 
 export function canConsumePairingToken(record: PairingTokenRecord, nowIso: string): boolean {
@@ -107,15 +122,39 @@ export function inspectPairingToken(
   token: string,
   nowIso = new Date().toISOString(),
 ): PairingTokenInspection {
-  const record = ensurePairingRecord(repository, token, nowIso);
-  if (!record) {
+  const parsed = parseSignedPairingToken(token);
+  if (!parsed) {
     return { accepted: false, reason: "invalid" };
   }
+
+  const isTrusted = verifyPairingTokenSignature({
+    publicKey: parsed.desktopPublicKey,
+    payload: parsed.payloadJson,
+    signature: parsed.signature,
+  });
+  if (!isTrusted) {
+    return {
+      accepted: false,
+      desktopDeviceId: parsed.desktopDeviceId,
+      desktopPublicKey: parsed.desktopPublicKey,
+      expiresAt: parsed.expiresAt,
+      reason: "untrusted",
+    };
+  }
+
+  const record = ensurePairingRecord(
+    repository,
+    token,
+    parsed.desktopPublicKey,
+    parsed.desktopDeviceId,
+    parsed.expiresAt,
+  );
 
   if (record.usedAt !== null) {
     return {
       accepted: false,
       desktopDeviceId: record.desktopDeviceId,
+      desktopPublicKey: parsed.desktopPublicKey,
       expiresAt: record.expiresAt,
       reason: "used",
     };
@@ -125,6 +164,7 @@ export function inspectPairingToken(
     return {
       accepted: false,
       desktopDeviceId: record.desktopDeviceId,
+      desktopPublicKey: parsed.desktopPublicKey,
       expiresAt: record.expiresAt,
       reason: "expired",
     };
@@ -133,6 +173,7 @@ export function inspectPairingToken(
   return {
     accepted: true,
     desktopDeviceId: record.desktopDeviceId,
+    desktopPublicKey: parsed.desktopPublicKey,
     expiresAt: record.expiresAt,
   };
 }
@@ -148,7 +189,17 @@ export function consumePairingToken(
   },
 ): PairingRecord {
   const nowIso = args.nowIso ?? new Date().toISOString();
-  const record = ensurePairingRecord(repository, args.token, nowIso);
+  const inspection = inspectPairingToken(repository, args.token, nowIso);
+  const record =
+    inspection.accepted && inspection.desktopPublicKey
+      ? ensurePairingRecord(
+          repository,
+          args.token,
+          inspection.desktopPublicKey,
+          inspection.desktopDeviceId ?? "desktop-device",
+          inspection.expiresAt ?? nowIso,
+        )
+      : null;
 
   if (!record) {
     throw new RelayProtocolError({
@@ -165,6 +216,7 @@ export function consumePairingToken(
       message: "pairing token is no longer valid",
       details: {
         desktopDeviceId: record.desktopDeviceId,
+        reason: inspection.reason,
         expiresAt: record.expiresAt,
         usedAt: record.usedAt,
       },
@@ -173,6 +225,7 @@ export function consumePairingToken(
 
   const consumed: PairingRecord = {
     ...record,
+    desktopPublicKey: inspection.desktopPublicKey ?? record.desktopPublicKey,
     candidateDeviceId: args.candidateDeviceId,
     candidateDeviceName: args.candidateDeviceName,
     candidatePublicKey: args.candidatePublicKey,

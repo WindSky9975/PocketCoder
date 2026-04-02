@@ -18,6 +18,7 @@ export interface PairingExchangeRequest {
 export interface PairingRegistrationResult {
   relayOrigin: string;
   desktopDeviceId: string;
+  desktopPublicKey: string;
   grantedScopes: string[];
   envelope: ReturnType<typeof deviceRegisteredEnvelopeSchema.parse>;
 }
@@ -54,6 +55,7 @@ export function createPairingModule(args: {
       const nowIso = new Date().toISOString();
       const inspection = inspectPairingToken(args.pairingRecords, normalized.token, nowIso);
       const desktopDeviceId = inspection.desktopDeviceId ?? "desktop-device";
+      const desktopPublicKey = inspection.desktopPublicKey ?? "";
       const candidateDeviceId = createBrowserDeviceId(normalized.candidatePublicKey);
 
       const pairingRecord = consumePairingToken(args.pairingRecords, {
@@ -71,11 +73,16 @@ export function createPairingModule(args: {
         pairedAt: nowIso,
       });
 
-      args.deviceRegistry.ensureDesktopDevice(pairingRecord.desktopDeviceId);
+      args.deviceRegistry.ensureDesktopDevice({
+        deviceId: pairingRecord.desktopDeviceId,
+        publicKey: pairingRecord.desktopPublicKey,
+        pairedAt: nowIso,
+      });
 
       return {
         relayOrigin: args.relayOrigin,
         desktopDeviceId: pairingRecord.desktopDeviceId,
+        desktopPublicKey,
         grantedScopes: browserDevice.scopes,
         envelope: deviceRegisteredEnvelopeSchema.parse({
           protocolVersion: PROTOCOL_VERSION,

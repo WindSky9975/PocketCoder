@@ -1,3 +1,5 @@
+import { randomBytes } from "node:crypto";
+
 export interface CipherEnvelope {
   senderDeviceId: string;
   ciphertext: string;
@@ -8,6 +10,6 @@ export function wrapEncryptedPayload(senderDeviceId: string, ciphertext: string)
   return {
     senderDeviceId,
     ciphertext,
-    nonce: "placeholder-nonce",
+    nonce: randomBytes(12).toString("base64url"),
   };
 }

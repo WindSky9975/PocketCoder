@@ -1,4 +1,6 @@
 {
+  "/pair/page": "app/pair/page.js",
   "/page": "app/page.js",
-  "/pair/page": "app/pair/page.js"
+  "/sessions/page": "app/sessions/page.js",
+  "/sessions/[sessionId]/page": "app/sessions/[sessionId]/page.js"
 }

@@ -1,6 +1,6 @@
 import { createCodexPtyProcess } from "./providers/codex/codex-pty.js";
 import { createCodexSessionAdapter } from "./providers/codex/codex-session-adapter.js";
-import { createDeviceKeyRecord } from "./security/device-keys.js";
+import { loadOrCreateDeviceKeyRecord } from "./security/device-keys.js";
 import { createSessionManager } from "./sessions/session-manager.js";
 import { createSessionRegistry } from "./sessions/session-registry.js";
 import { createCommandHandler } from "./transport/command-handler.js";
@@ -18,21 +18,27 @@ export function createAgentdRuntime(): AgentdRuntime {
   const config = readAgentdConfig();
   const logger = createLogger();
   const paths = resolveAgentdPaths();
-  const deviceKey = createDeviceKeyRecord(
-    process.env.POCKETCODER_DEVICE_ID ?? "desktop-device",
-  );
+  const deviceKey = loadOrCreateDeviceKeyRecord({
+    runtimeRoot: paths.runtimeRoot,
+    deviceId: process.env.POCKETCODER_DEVICE_ID ?? "desktop-device",
+  });
   const sessionRegistry = createSessionRegistry();
   const sessionManager = createSessionManager(sessionRegistry);
   const codexPty = createCodexPtyProcess(config.codexCommand);
   const commandHandler = createCommandHandler(sessionManager, codexPty);
+  let eventPublisher: ReturnType<typeof createEventPublisher> | null = null;
   const relayClient = createRelayClient({
     relayUrl: config.relayUrl,
     deviceId: deviceKey.deviceId,
+    publicKey: deviceKey.publicKey,
     onCommand: async (command) => {
-      await commandHandler.handle(command);
+      const updatedSession = await commandHandler.handle(command);
+      if (updatedSession && eventPublisher) {
+        await eventPublisher.publishSessionSummary(updatedSession);
+      }
     }
   });
-  const eventPublisher = createEventPublisher(relayClient);
+  eventPublisher = createEventPublisher(relayClient);
   const sessionAdapter = createCodexSessionAdapter(sessionManager, eventPublisher);
 
   return {

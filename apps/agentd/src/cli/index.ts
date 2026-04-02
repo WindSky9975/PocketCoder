@@ -1,10 +1,22 @@
+import { resolveAgentdPaths } from "../infra/paths.js";
+import { loadOrCreateDeviceKeyRecord } from "../security/device-keys.js";
 import { createAgentdRuntime } from "../bootstrap.js";
 import { issuePairingToken } from "../security/pairing.js";
 
 export async function startCli(argv = process.argv.slice(2)): Promise<void> {
   if (argv[0] === "auth") {
-    const deviceId = process.env.POCKETCODER_DEVICE_ID ?? "desktop-device";
-    console.log(issuePairingToken(deviceId));
+    const paths = resolveAgentdPaths();
+    const deviceKey = loadOrCreateDeviceKeyRecord({
+      runtimeRoot: paths.runtimeRoot,
+      deviceId: process.env.POCKETCODER_DEVICE_ID ?? "desktop-device",
+    });
+    console.log(
+      issuePairingToken({
+        runtimeRoot: paths.runtimeRoot,
+        deviceKey,
+        webOrigin: process.env.POCKETCODER_WEB_ORIGIN,
+      }),
+    );
     return;
   }
 

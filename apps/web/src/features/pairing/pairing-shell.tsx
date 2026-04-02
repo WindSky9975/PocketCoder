@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
-import { createBrowserDeviceKeyRecord } from "../../lib/crypto/device-keyring.ts";
+import { loadOrCreateBrowserDeviceKeyRecord } from "../../lib/crypto/device-keyring.ts";
 import { translateClientError } from "../../lib/i18n/helpers.ts";
 import { useMessages } from "../../lib/i18n/provider.tsx";
 import { saveStoredPairedDevice } from "../../lib/storage/device-store.ts";
@@ -67,7 +67,9 @@ export function PairingShell() {
     setErrorMessage(null);
 
     try {
-      const keyRecord = createBrowserDeviceKeyRecord(createBrowserDeviceId());
+      const keyRecord = await loadOrCreateBrowserDeviceKeyRecord({
+        deviceId: createBrowserDeviceId(),
+      });
       const pairingResult = await startPairing({
         relayOrigin: relayOrigin.trim(),
         token: token.trim(),

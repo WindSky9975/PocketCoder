@@ -1,5 +1,6 @@
-import type { SessionManager } from "../sessions/session-manager.js";
 import type { CodexPtyProcess } from "../providers/codex/codex-pty.js";
+import type { SessionRecord } from "../sessions/session-registry.js";
+import type { SessionManager } from "../sessions/session-manager.js";
 
 export interface CommandEnvelope {
   type: string;
@@ -7,7 +8,7 @@ export interface CommandEnvelope {
 }
 
 export interface CommandHandler {
-  handle(command: CommandEnvelope): Promise<void>;
+  handle(command: CommandEnvelope): Promise<SessionRecord | null>;
 }
 
 export function createCommandHandler(
@@ -18,24 +19,23 @@ export function createCommandHandler(
     async handle(command) {
       if (command.type === "SendPrompt") {
         await codexPty.write(String(command.payload.prompt ?? ""));
-        sessionManager.updateStatus(String(command.payload.sessionId), "running");
-        return;
+        return sessionManager.updateStatus(String(command.payload.sessionId), "running");
       }
 
       if (command.type === "ApprovalResponse") {
-        sessionManager.updateStatus(String(command.payload.sessionId), "running");
-        return;
+        return sessionManager.updateStatus(String(command.payload.sessionId), "running");
       }
 
       if (command.type === "InterruptSession") {
         await codexPty.stop();
-        sessionManager.updateStatus(String(command.payload.sessionId), "disconnected");
-        return;
+        return sessionManager.updateStatus(String(command.payload.sessionId), "disconnected");
       }
 
       if (command.type === "ResumeDesktopControl") {
-        sessionManager.updateStatus(String(command.payload.sessionId), "disconnected");
+        return sessionManager.updateStatus(String(command.payload.sessionId), "disconnected");
       }
+
+      return null;
     }
   };
 }

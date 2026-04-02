@@ -23,6 +23,7 @@ export interface PairingStartPayload {
 export interface PairingStartResult {
   pairedDevice: StoredPairedDevice;
   desktopDeviceId: string;
+  desktopPublicKey: string;
   grantedScopes: string[];
   registrationEnvelope: {
     payload: {
@@ -77,6 +78,7 @@ export async function startPairing(input: PairingStartInput): Promise<PairingSta
 
   const registration = (await response.json()) as {
     desktopDeviceId: string;
+    desktopPublicKey: string;
     grantedScopes: string[];
     envelope: {
       payload: {
@@ -90,10 +92,13 @@ export async function startPairing(input: PairingStartInput): Promise<PairingSta
   return {
     pairedDevice: createStoredPairedDevice(
       registration.envelope.payload.deviceId,
+      registration.desktopDeviceId,
+      registration.desktopPublicKey,
       input.relayOrigin,
       registration.grantedScopes,
     ),
     desktopDeviceId: registration.desktopDeviceId,
+    desktopPublicKey: registration.desktopPublicKey,
     grantedScopes: registration.grantedScopes,
     registrationEnvelope: registration.envelope,
   };

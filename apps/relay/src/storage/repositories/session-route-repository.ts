@@ -1,6 +1,12 @@
+import type { SessionStatus } from "@pocketcoder/protocol";
+
 export interface SessionRouteRecord {
   sessionId: string;
   ownerDeviceId: string;
+  provider?: string;
+  status?: SessionStatus;
+  currentTask?: string;
+  lastActivityAt?: string;
   updatedAt: string;
 }
 

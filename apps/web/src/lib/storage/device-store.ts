@@ -1,5 +1,7 @@
 export interface StoredPairedDevice {
   deviceId: string;
+  desktopDeviceId: string;
+  desktopPublicKey: string;
   pairedAt: string;
   relayOrigin: string;
   accessScope: string[];
@@ -16,11 +18,15 @@ const STORAGE_KEY_PREFIX = "pocketcoder.paired-device";
 
 export function createStoredPairedDevice(
   deviceId: string,
+  desktopDeviceId: string,
+  desktopPublicKey: string,
   relayOrigin: string,
   accessScope = ["session:read", "session:write"],
 ): StoredPairedDevice {
   return {
     deviceId,
+    desktopDeviceId,
+    desktopPublicKey,
     pairedAt: new Date().toISOString(),
     relayOrigin,
     accessScope,
@@ -66,6 +72,8 @@ export function loadStoredPairedDevice(
     const parsed = JSON.parse(raw) as Partial<StoredPairedDevice>;
     if (
       typeof parsed.deviceId !== "string" ||
+      typeof parsed.desktopDeviceId !== "string" ||
+      typeof parsed.desktopPublicKey !== "string" ||
       typeof parsed.pairedAt !== "string" ||
       typeof parsed.relayOrigin !== "string" ||
       !Array.isArray(parsed.accessScope) ||
@@ -76,6 +84,8 @@ export function loadStoredPairedDevice(
 
     return {
       deviceId: parsed.deviceId,
+      desktopDeviceId: parsed.desktopDeviceId,
+      desktopPublicKey: parsed.desktopPublicKey,
       pairedAt: parsed.pairedAt,
       relayOrigin: parsed.relayOrigin,
       accessScope: parsed.accessScope,

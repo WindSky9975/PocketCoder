@@ -8,6 +8,7 @@ import { createReplayService } from "./modules/replay/service.js";
 import { createSessionRelayService } from "./modules/sessions/service.js";
 import { createDeviceRegistry } from "./security/device-registry.js";
 import { createRelayStorage } from "./storage/sqlite.js";
+import { registerHttpCors } from "./transport/http/cors.js";
 import { registerHttpRoutes } from "./transport/http/routes.js";
 import { createConnectionRegistry } from "./transport/ws/connection-registry.js";
 import { registerWsRoutes } from "./transport/ws/routes.js";
@@ -31,7 +32,8 @@ export async function buildApp(config: RelayConfig = readRelayConfig()) {
   });
 
   await app.register(websocket);
-  await registerHttpRoutes(app, { pairing, storage, connections });
+  await registerHttpCors(app);
+  await registerHttpRoutes(app, { pairing, storage, connections, deviceRegistry, sessions });
   await registerWsRoutes(app, { connections, deviceRegistry, sessions });
 
   return app;

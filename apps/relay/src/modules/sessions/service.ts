@@ -1,10 +1,21 @@
-import type { ProtocolCommandEnvelope, ProtocolEventEnvelope } from "@pocketcoder/protocol";
+import {
+  PROTOCOL_VERSION,
+  createMessageId,
+  sessionSummaryEnvelopeSchema,
+  sessionDirectoryResponseSchema,
+  type ProtocolCommandEnvelope,
+  type ProtocolEventEnvelope,
+  type SessionSummaryPayload,
+} from "@pocketcoder/protocol";
 
 import { RelayProtocolError } from "../../infra/protocol-error.js";
 import { assertSessionScope } from "../../security/access-control.js";
 import type { DeviceGrant } from "../../security/device-registry.js";
 import type { CommandDedupeRepository } from "../../storage/repositories/command-dedupe-repository.js";
-import type { SessionRouteRepository } from "../../storage/repositories/session-route-repository.js";
+import type {
+  SessionRouteRecord,
+  SessionRouteRepository,
+} from "../../storage/repositories/session-route-repository.js";
 import { createAckEnvelope } from "../../transport/protocol-messages.js";
 import type { ConnectionRegistry, ConnectionRecord } from "../../transport/ws/connection-registry.js";
 import type { ReplayService } from "../replay/service.js";
@@ -17,6 +28,10 @@ type SessionControlEnvelope = Exclude<
 
 export interface SessionRelayService {
   handleRealtimeEvent(sourceConnectionId: string, sourceDeviceId: string, envelope: ProtocolEventEnvelope): void;
+  listSessionDirectory(args: {
+    grant: DeviceGrant | null;
+    pairedDesktopDeviceId: string | null;
+  }): ReturnType<typeof sessionDirectoryResponseSchema.parse>;
   handleSessionSubscribe(
     connectionId: string,
     grant: DeviceGrant | null,
@@ -60,11 +75,14 @@ export function createSessionRelayService(args: {
   return {
     handleRealtimeEvent(sourceConnectionId, sourceDeviceId, envelope) {
       const sessionId = readSessionId(envelope.payload);
-      args.routes.save({
-        sessionId,
-        ownerDeviceId: sourceDeviceId,
-        updatedAt: envelope.timestamp,
-      });
+      const currentRoute = args.routes.get(sessionId);
+      args.routes.save(
+        buildSessionRouteRecord({
+          currentRoute,
+          sourceDeviceId,
+          envelope,
+        }),
+      );
 
       args.replay.record(envelope);
 
@@ -76,15 +94,39 @@ export function createSessionRelayService(args: {
         args.connections.send(subscriber.connectionId, JSON.stringify(envelope));
       }
     },
+    listSessionDirectory({ grant, pairedDesktopDeviceId }) {
+      assertSessionScope(grant, "session:read");
+
+      if (!pairedDesktopDeviceId) {
+        return sessionDirectoryResponseSchema.parse({ sessions: [] });
+      }
+
+      const sessions = args.routes
+        .list()
+        .filter((route) => route.ownerDeviceId === pairedDesktopDeviceId)
+        .map(toSessionSummaryPayload)
+        .filter((summary): summary is SessionSummaryPayload => summary !== null)
+        .sort((left, right) => right.lastActivityAt.localeCompare(left.lastActivityAt));
+
+      return sessionDirectoryResponseSchema.parse({
+        sessions,
+      });
+    },
     handleSessionSubscribe(connectionId, grant, envelope) {
       assertSessionScope(grant, "session:read");
 
       const sessionId = readSessionId(envelope.payload);
       args.connections.subscribe(connectionId, sessionId);
+      const sessionSnapshot = toSessionSummaryPayload(args.routes.get(sessionId));
+      const replay = args.replay
+        .listRecent(sessionId)
+        .filter((replayEnvelope) => replayEnvelope.type !== "SessionSummary");
 
       return {
         ack: createAckEnvelope(envelope.messageId, true, `subscribed to ${sessionId}`),
-        replay: args.replay.listRecent(sessionId),
+        replay: sessionSnapshot
+          ? [createSessionSummaryEnvelope(sessionSnapshot), ...replay]
+          : replay,
       };
     },
     handleControlCommand(sourceDeviceId, grant, envelope) {
@@ -130,4 +172,84 @@ export function createSessionRelayService(args: {
       };
     },
   };
+}
+
+function buildSessionRouteRecord(args: {
+  currentRoute: SessionRouteRecord | null;
+  sourceDeviceId: string;
+  envelope: ProtocolEventEnvelope;
+}): SessionRouteRecord {
+  const sessionId = readSessionId(args.envelope.payload);
+  const currentRoute = args.currentRoute;
+  const baseRecord: SessionRouteRecord = {
+    sessionId,
+    ownerDeviceId: args.sourceDeviceId,
+    provider: currentRoute?.provider,
+    status: currentRoute?.status,
+    currentTask: currentRoute?.currentTask,
+    lastActivityAt: currentRoute?.lastActivityAt,
+    updatedAt: args.envelope.timestamp,
+  };
+
+  if (args.envelope.type === "SessionSummary") {
+    return {
+      ...baseRecord,
+      provider: args.envelope.payload.provider,
+      status: args.envelope.payload.status,
+      currentTask: args.envelope.payload.currentTask,
+      lastActivityAt: args.envelope.payload.lastActivityAt,
+    };
+  }
+
+  if (args.envelope.type === "SessionStateChanged") {
+    return {
+      ...baseRecord,
+      status: args.envelope.payload.status,
+      lastActivityAt: args.envelope.timestamp,
+    };
+  }
+
+  if (args.envelope.type === "ApprovalRequested") {
+    return {
+      ...baseRecord,
+      status: "waiting_approval",
+      currentTask: args.envelope.payload.prompt,
+      lastActivityAt: args.envelope.payload.issuedAt,
+    };
+  }
+
+  if (args.envelope.type === "SessionOutputDelta") {
+    return {
+      ...baseRecord,
+      lastActivityAt: args.envelope.timestamp,
+    };
+  }
+
+  return baseRecord;
+}
+
+function toSessionSummaryPayload(route: SessionRouteRecord | null): SessionSummaryPayload | null {
+  if (!route || !route.provider || !route.status || !route.lastActivityAt) {
+    return null;
+  }
+
+  return {
+    sessionId: route.sessionId,
+    provider: route.provider,
+    status: route.status,
+    ...(route.currentTask ? { currentTask: route.currentTask } : {}),
+    lastActivityAt: route.lastActivityAt,
+  };
+}
+
+function createSessionSummaryEnvelope(
+  payload: SessionSummaryPayload,
+): Extract<ProtocolEventEnvelope, { type: "SessionSummary" }> {
+  return sessionSummaryEnvelopeSchema.parse({
+    protocolVersion: PROTOCOL_VERSION,
+    messageId: createMessageId("evt"),
+    timestamp: payload.lastActivityAt,
+    type: "SessionSummary",
+    payload,
+  });
 }

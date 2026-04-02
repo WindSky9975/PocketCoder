@@ -12,3 +12,5 @@ npm-debug.log*
 .playwright-mcp/
 .DS_Store
 Thumbs.db
+apps/agentd/.agentd/
+.agentd/

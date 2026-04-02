@@ -10,17 +10,23 @@ import {
 } from "../../lib/storage/device-store.ts";
 import { useMessages } from "../../lib/i18n/provider.tsx";
 
-export function StoredDeviceCard() {
+export function StoredDeviceCard(props: {
+  onDeviceChange?: (device: StoredPairedDevice | null) => void;
+}) {
+  const { onDeviceChange } = props;
   const [pairedDevice, setPairedDevice] = useState<StoredPairedDevice | null | undefined>(undefined);
   const messages = useMessages();
 
   useEffect(() => {
-    setPairedDevice(loadStoredPairedDevice());
-  }, []);
+    const device = loadStoredPairedDevice();
+    setPairedDevice(device);
+    onDeviceChange?.(device);
+  }, [onDeviceChange]);
 
   function handleForgetPairing() {
     clearStoredPairedDevice();
     setPairedDevice(null);
+    onDeviceChange?.(null);
   }
 
   if (pairedDevice === undefined) {

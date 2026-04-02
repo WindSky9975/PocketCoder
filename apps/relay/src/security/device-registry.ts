@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 
+import { RelayProtocolError } from "../infra/protocol-error.js";
 import type {
   DeviceRecord,
   DeviceRecordRepository,
@@ -15,7 +16,11 @@ export interface DeviceGrant {
 export type RegisteredDevice = DeviceRecord;
 
 export interface DeviceRegistry {
-  ensureDesktopDevice(deviceId: string): RegisteredDevice;
+  ensureDesktopDevice(input: {
+    deviceId: string;
+    publicKey: string;
+    pairedAt?: string;
+  }): RegisteredDevice;
   registerBrowserDevice(input: {
     desktopDeviceId: string;
     deviceName: string;
@@ -55,19 +60,28 @@ export function createBrowserDeviceId(publicKey: string): string {
 
 export function createDeviceRegistry(repository: DeviceRecordRepository): DeviceRegistry {
   return {
-    ensureDesktopDevice(deviceId) {
-      const existing = repository.get(deviceId);
+    ensureDesktopDevice(input) {
+      const existing = repository.get(input.deviceId);
       if (existing) {
+        if (existing.publicKey !== input.publicKey) {
+          throw new RelayProtocolError({
+            code: "UNAUTHORIZED",
+            statusCode: 403,
+            message: "desktop device public key does not match the registered identity",
+            details: { deviceId: input.deviceId },
+          });
+        }
+
         return existing;
       }
 
       const created = createRegisteredDevice({
-        deviceId,
+        deviceId: input.deviceId,
         deviceName: "Desktop Agent",
-        publicKey: "desktop-public-key-pending",
+        publicKey: input.publicKey,
         role: "desktop",
         pairedDesktopDeviceId: null,
-        pairedAt: new Date().toISOString(),
+        pairedAt: input.pairedAt ?? new Date().toISOString(),
         scopes: ["session:publish"],
       });
 

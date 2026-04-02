@@ -60,6 +60,10 @@ export function translateClientError(messages: Messages, errorMessage: string): 
     return messages.errors.fetchUnavailable;
   }
 
+  if (normalized.includes("failed to fetch")) {
+    return messages.errors.relayConnectFailed;
+  }
+
   if (normalized.includes("websocket is not available")) {
     return messages.errors.websocketUnavailable;
   }

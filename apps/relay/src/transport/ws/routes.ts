@@ -45,11 +45,39 @@ export async function registerWsRoutes(
   },
 ): Promise<void> {
   app.get("/ws", { websocket: true }, async (socket, request) => {
-    const query = request.query as { deviceId?: string; role?: string };
+    const query = request.query as { deviceId?: string; role?: string; publicKey?: string };
     const deviceId = normalizeHeaderValue(request.headers["x-device-id"]) ?? query.deviceId;
     const role = normalizeDeviceRole(
       normalizeHeaderValue(request.headers["x-device-role"]) ?? query.role,
     );
+    const publicKey =
+      normalizeHeaderValue(request.headers["x-device-public-key"]) ?? query.publicKey;
+
+    if (role === "desktop" && (!deviceId || !publicKey)) {
+      sendJson(
+        socket,
+        createErrorEnvelope("UNAUTHORIZED", "desktop connections must include device identity"),
+      );
+      socket.close(1008, "unauthorized");
+      return;
+    }
+
+    if (role === "desktop" && deviceId && publicKey) {
+      try {
+        deps.deviceRegistry.ensureDesktopDevice({
+          deviceId,
+          publicKey,
+        });
+      } catch (error) {
+        const envelope = isRelayProtocolError(error)
+          ? createErrorEnvelope(error.code, error.message, error.details)
+          : createErrorEnvelope("UNAUTHORIZED", "desktop identity was rejected");
+        sendJson(socket, envelope);
+        socket.close(1008, "unauthorized");
+        return;
+      }
+    }
+
     const grant = deviceId ? deps.deviceRegistry.getGrant(deviceId) : null;
 
     try {

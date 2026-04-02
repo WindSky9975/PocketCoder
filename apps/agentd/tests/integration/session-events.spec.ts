@@ -1,11 +1,21 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { describe, it } from "node:test";
 
 import { createCodexSessionAdapter } from "../../dist/providers/codex/codex-session-adapter.js";
+import {
+  loadOrCreateDeviceKeyRecord,
+  signPayloadWithDeviceKey,
+  verifyDeviceSignature,
+} from "../../dist/security/device-keys.js";
 import { createSessionManager } from "../../dist/sessions/session-manager.js";
 import { createSessionRegistry } from "../../dist/sessions/session-registry.js";
+import { createCommandHandler } from "../../dist/transport/command-handler.js";
 import { createEventPublisher } from "../../dist/transport/event-publisher.js";
 import { createRelayClient } from "../../dist/transport/relay-client.js";
+import { resolveAgentdPaths } from "../../dist/infra/paths.js";
 
 describe("agentd event flow and approval handoff", () => {
   it("maps provider events into protocol envelopes for approval and session updates", async () => {
@@ -100,6 +110,7 @@ describe("agentd event flow and approval handoff", () => {
       const relayClient = createRelayClient({
         relayUrl: "ws://127.0.0.1:8787/ws",
         deviceId: "desktop-1",
+        publicKey: "desktop-public-key",
         onCommand: async (command) => {
           receivedCommands.push(command);
         },
@@ -109,7 +120,9 @@ describe("agentd event flow and approval handoff", () => {
 
       assert.equal(FakeWebSocket.instances.length, 1);
       assert.equal(
-        FakeWebSocket.instances[0]?.url.includes("deviceId=desktop-1&role=desktop"),
+        FakeWebSocket.instances[0]?.url.includes(
+          "deviceId=desktop-1&role=desktop&publicKey=desktop-public-key",
+        ),
         true,
       );
 
@@ -147,5 +160,84 @@ describe("agentd event flow and approval handoff", () => {
     } finally {
       globalThis.WebSocket = originalWebSocket;
     }
+  });
+
+  it("persists the desktop identity and signs payloads with the stored private key", () => {
+    const runtimeRoot = fs.mkdtempSync(path.join(os.tmpdir(), "pocketcoder-agentd-"));
+
+    const deviceKey = loadOrCreateDeviceKeyRecord({
+      runtimeRoot,
+      deviceId: "desktop-1",
+    });
+    const again = loadOrCreateDeviceKeyRecord({
+      runtimeRoot,
+      deviceId: "desktop-1",
+    });
+    const payload = JSON.stringify({
+      desktopDeviceId: "desktop-1",
+      desktopPublicKey: deviceKey.publicKey,
+      expiresAt: "2099-01-01T00:05:00.000Z",
+      tokenId: "desktop-1-token",
+    });
+    const signature = signPayloadWithDeviceKey({
+      runtimeRoot,
+      payload,
+    });
+
+    assert.equal(again.publicKey, deviceKey.publicKey);
+    assert.equal(
+      verifyDeviceSignature({
+        publicKey: deviceKey.publicKey,
+        payload,
+        signature,
+      }),
+      true,
+    );
+  });
+
+  it("returns updated session records when relay commands change local session status", async () => {
+    const sessionManager = createSessionManager(createSessionRegistry());
+    const codexWrites: string[] = [];
+    const commandHandler = createCommandHandler(sessionManager, {
+      async start() {
+        return undefined;
+      },
+      async write(input: string) {
+        codexWrites.push(input);
+      },
+      async stop() {
+        codexWrites.push("__stopped__");
+      },
+    });
+
+    sessionManager.openSession("session-1", "codex");
+
+    const running = await commandHandler.handle({
+      type: "SendPrompt",
+      payload: {
+        sessionId: "session-1",
+        prompt: "inspect session route metadata",
+      },
+    });
+    const disconnected = await commandHandler.handle({
+      type: "InterruptSession",
+      payload: {
+        sessionId: "session-1",
+      },
+    });
+
+    assert.equal(codexWrites[0], "inspect session route metadata");
+    assert.equal(codexWrites[1], "__stopped__");
+    assert.equal(running?.status, "running");
+    assert.equal(disconnected?.status, "disconnected");
+  });
+
+  it("keeps the runtime root anchored to the agent workspace instead of process cwd", () => {
+    const paths = resolveAgentdPaths();
+
+    assert.equal(
+      paths.runtimeRoot.endsWith(path.join("apps", "agentd", ".agentd")),
+      true,
+    );
   });
 });

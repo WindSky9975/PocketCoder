@@ -29,9 +29,13 @@ function createMemoryStorage(): BrowserStorageLike {
 describe("device store boundary", () => {
   it("persists paired devices under a scoped storage key", () => {
     const storage = createMemoryStorage();
-    const pairedDevice = createStoredPairedDevice("browser-1", "https://relay.example", [
-      "session:read",
-    ]);
+    const pairedDevice = createStoredPairedDevice(
+      "browser-1",
+      "desktop-1",
+      "desktop-public-key",
+      "https://relay.example",
+      ["session:read"],
+    );
 
     saveStoredPairedDevice(pairedDevice, {
       scope: "pairing",
@@ -50,14 +54,20 @@ describe("device store boundary", () => {
 
   it("clears stored pairing records without affecting other scopes", () => {
     const storage = createMemoryStorage();
-    saveStoredPairedDevice(createStoredPairedDevice("browser-a", "https://relay-a.example"), {
-      scope: "desktop-a",
-      storage,
-    });
-    saveStoredPairedDevice(createStoredPairedDevice("browser-b", "https://relay-b.example"), {
-      scope: "desktop-b",
-      storage,
-    });
+    saveStoredPairedDevice(
+      createStoredPairedDevice("browser-a", "desktop-a", "desktop-public-key-a", "https://relay-a.example"),
+      {
+        scope: "desktop-a",
+        storage,
+      },
+    );
+    saveStoredPairedDevice(
+      createStoredPairedDevice("browser-b", "desktop-b", "desktop-public-key-b", "https://relay-b.example"),
+      {
+        scope: "desktop-b",
+        storage,
+      },
+    );
 
     clearStoredPairedDevice({
       scope: "desktop-a",
@@ -78,5 +88,17 @@ describe("device store boundary", () => {
       })?.deviceId,
       "browser-b",
     );
+  });
+
+  it("keeps the paired desktop identity alongside the browser device record", () => {
+    const pairedDevice = createStoredPairedDevice(
+      "browser-1",
+      "desktop-1",
+      "desktop-public-key",
+      "https://relay.example",
+    );
+
+    assert.equal(pairedDevice.desktopDeviceId, "desktop-1");
+    assert.equal(pairedDevice.desktopPublicKey, "desktop-public-key");
   });
 });

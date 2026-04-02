@@ -43,6 +43,7 @@ describe("web pairing and approval surfaces", () => {
           async json() {
             return {
               desktopDeviceId: "desktop-1",
+              desktopPublicKey: "desktop-public-key",
               grantedScopes: ["session:read", "session:write"],
               envelope: {
                 payload: {
@@ -60,6 +61,8 @@ describe("web pairing and approval surfaces", () => {
     assert.equal(requests[0]?.url, "http://relay.test/pairing/init");
     assert.equal(requests[0]?.body.type, "PairingInit");
     assert.equal(result.pairedDevice.deviceId, "browser-registered");
+    assert.equal(result.desktopPublicKey, "desktop-public-key");
+    assert.equal(result.pairedDevice.desktopDeviceId, "desktop-1");
     assert.deepEqual(result.pairedDevice.accessScope, ["session:read", "session:write"]);
   });
 });

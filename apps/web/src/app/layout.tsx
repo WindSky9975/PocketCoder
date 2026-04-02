@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: "PocketCoder",
   description: "PocketCoder 的手机优先配对编码控制台。",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export const viewport: Viewport = {

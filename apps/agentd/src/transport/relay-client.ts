@@ -33,6 +33,7 @@ export interface RelayClient {
 export function createRelayClient(args: {
   relayUrl: string;
   deviceId: string;
+  publicKey: string;
   onCommand: (command: ProtocolCommandEnvelope) => Promise<void>;
 }): RelayClient {
   const WebSocketConstructor = globalThis.WebSocket as unknown as RelayWebSocketConstructor | undefined;
@@ -59,6 +60,7 @@ export function createRelayClient(args: {
       const relayUrl = new URL(args.relayUrl);
       relayUrl.searchParams.set("deviceId", args.deviceId);
       relayUrl.searchParams.set("role", "desktop");
+      relayUrl.searchParams.set("publicKey", args.publicKey);
 
       socket = new WebSocketConstructor(relayUrl.toString());
       socket.addEventListener("message", async (event) => {

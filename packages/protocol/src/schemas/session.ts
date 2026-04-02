@@ -36,6 +36,10 @@ export const approvalRequestedPayloadSchema = z.object({
   issuedAt: z.string().datetime({ offset: true })
 });
 
+export const sessionDirectoryResponseSchema = z.object({
+  sessions: z.array(sessionSummaryPayloadSchema)
+});
+
 export const sessionSummaryEnvelopeSchema = createEnvelopeSchema(
   "SessionSummary",
   sessionSummaryPayloadSchema
@@ -62,3 +66,4 @@ export type SessionSubscribePayload = z.infer<typeof sessionSubscribePayloadSche
 export type SessionOutputDeltaPayload = z.infer<typeof sessionOutputDeltaPayloadSchema>;
 export type SessionStateChangedPayload = z.infer<typeof sessionStateChangedPayloadSchema>;
 export type ApprovalRequestedPayload = z.infer<typeof approvalRequestedPayloadSchema>;
+export type SessionDirectoryResponse = z.infer<typeof sessionDirectoryResponseSchema>;

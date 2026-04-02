@@ -1,24 +1,79 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+
+import type { SessionStatus, SessionSummaryPayload } from "@pocketcoder/protocol";
 
 import { StoredDeviceCard } from "../connection/stored-device-card.tsx";
-import { useMessages } from "../../lib/i18n/provider.tsx";
+import {
+  formatLocaleTimestamp,
+  getSessionStatusLabel,
+  translateClientError,
+} from "../../lib/i18n/helpers.ts";
+import { useLocale } from "../../lib/i18n/provider.tsx";
+import { fetchRelaySessionDirectory } from "../../lib/realtime/session-directory.ts";
+import type { StoredPairedDevice } from "../../lib/storage/device-store.ts";
 
-function getChipClass(tone: "live" | "warn" | "default"): string {
-  if (tone === "live") {
+function getChipClass(status: SessionStatus): string {
+  if (status === "running") {
     return "status-chip status-chip--live";
   }
 
-  if (tone === "warn") {
+  if (status === "waiting_approval" || status === "waiting_input") {
     return "status-chip status-chip--warn";
+  }
+
+  if (status === "error" || status === "disconnected") {
+    return "status-chip status-chip--danger";
   }
 
   return "status-chip";
 }
 
 export function SessionListShell() {
-  const messages = useMessages();
+  const { locale, messages } = useLocale();
+  const [pairedDevice, setPairedDevice] = useState<StoredPairedDevice | null | undefined>(undefined);
+  const [sessions, setSessions] = useState<SessionSummaryPayload[]>([]);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(false);
+  const [sessionLoadError, setSessionLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!pairedDevice) {
+      setSessions([]);
+      setSessionLoadError(null);
+      setIsLoadingSessions(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsLoadingSessions(true);
+    setSessionLoadError(null);
+
+    void fetchRelaySessionDirectory({
+      relayOrigin: pairedDevice.relayOrigin,
+      deviceId: pairedDevice.deviceId,
+    })
+      .then((nextSessions) => {
+        if (!cancelled) {
+          setSessions(nextSessions);
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setSessionLoadError(error instanceof Error ? error.message : "relay command failed");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoadingSessions(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pairedDevice]);
 
   return (
     <div className="page-stack">
@@ -28,26 +83,41 @@ export function SessionListShell() {
         <p className="lede">{messages.sessions.heroLede}</p>
       </section>
 
-      <StoredDeviceCard />
+      <StoredDeviceCard onDeviceChange={setPairedDevice} />
 
       <section className="section-card">
         <div className="section-head">
           <p className="eyebrow">{messages.sessions.overviewEyebrow}</p>
           <h2 className="section-title">{messages.sessions.overviewTitle}</h2>
         </div>
+        {sessionLoadError ? (
+          <p className="status-note status-note--danger" role="alert">
+            {translateClientError(messages, sessionLoadError)}
+          </p>
+        ) : null}
+        {isLoadingSessions ? (
+          <p className="status-note">{messages.statuses.connection.loading}</p>
+        ) : null}
+        {!isLoadingSessions && !sessionLoadError && pairedDevice && sessions.length === 0 ? (
+          <p className="status-note">{messages.common.noActivityYet}</p>
+        ) : null}
         <div className="session-grid">
-          {messages.sessions.mockSessions.map((session) => (
+          {sessions.map((session) => (
             <Link
               key={session.sessionId}
               href={`/sessions/${session.sessionId}`}
               className="session-card"
             >
               <div className="chip-row">
-                <span className={getChipClass(session.tone)}>{session.status}</span>
-                <span className="status-chip">{session.latency}</span>
+                <span className={getChipClass(session.status)}>
+                  {getSessionStatusLabel(messages, session.status)}
+                </span>
+                <span className="status-chip">
+                  {formatLocaleTimestamp(locale, messages, session.lastActivityAt)}
+                </span>
               </div>
-              <h2>{session.title}</h2>
-              <p className="session-meta">{session.summary}</p>
+              <h2>{session.currentTask ?? `${session.provider} / ${session.sessionId}`}</h2>
+              <p className="session-meta">{session.provider}</p>
               <div className="metric-row">
                 <span>{session.sessionId}</span>
                 <span>{messages.sessions.openDetail}</span>

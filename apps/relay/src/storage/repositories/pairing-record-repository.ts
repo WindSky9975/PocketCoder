@@ -1,6 +1,7 @@
 export interface PairingRecord {
   tokenHash: string;
   desktopDeviceId: string;
+  desktopPublicKey: string;
   candidatePublicKey: string | null;
   candidateDeviceName: string | null;
   candidateDeviceId: string | null;
@@ -35,11 +36,13 @@ export function createPairingRecordRepository(
 export function createEmptyPairingRecord(
   tokenHash: string,
   desktopDeviceId: string,
+  desktopPublicKey: string,
   expiresAt: string,
 ): PairingRecord {
   return {
     tokenHash,
     desktopDeviceId,
+    desktopPublicKey,
     candidatePublicKey: null,
     candidateDeviceName: null,
     candidateDeviceId: null,
