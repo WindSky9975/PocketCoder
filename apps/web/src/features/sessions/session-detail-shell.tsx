@@ -7,21 +7,22 @@ import type { ApprovalRequestedPayload, SessionStatus } from "@pocketcoder/proto
 
 import { ApprovalRequestCard } from "../approvals/approval-request-card.tsx";
 import {
+  formatLocaleTimestamp,
+  getConnectionStateLabel,
+  getDecisionLabel,
+  getSessionStatusLabel,
+  getStreamLabel,
+  translateClientError,
+  type ConnectionState,
+} from "../../lib/i18n/helpers.ts";
+import { useLocale } from "../../lib/i18n/provider.tsx";
+import {
   createBrowserRelayClient,
   resolveRelayWebSocketUrl,
   type BrowserRelayClient,
   type RelayInboundMessage,
 } from "../../lib/realtime/relay-client.ts";
 import { loadStoredPairedDevice, type StoredPairedDevice } from "../../lib/storage/device-store.ts";
-
-type ConnectionState = "loading" | "missing_pairing" | "connecting" | "connected" | "error";
-
-const sessionFacts = [
-  { label: "Ownership", value: "Desktop remains the source of execution" },
-  { label: "Realtime", value: "WebSocket stream enters through lib/realtime" },
-  { label: "Storage", value: "Session hints may persist through lib/storage only" },
-  { label: "Protocol", value: "Shared contract types come from @pocketcoder/protocol" },
-];
 
 function statusChipClass(status: SessionStatus | "disconnected"): string {
   if (status === "running") {
@@ -39,38 +40,29 @@ function statusChipClass(status: SessionStatus | "disconnected"): string {
   return "status-chip";
 }
 
-function formatTimestamp(value: string | null): string {
-  if (!value) {
-    return "No activity received yet";
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return date.toLocaleString();
-}
-
 function appendOutputLine(current: string[], nextLine: string): string[] {
   const next = [...current, nextLine];
   return next.slice(Math.max(0, next.length - 60));
 }
 
 export function SessionDetailShell({ sessionId }: { sessionId: string }) {
+  const { locale, messages } = useLocale();
   const [pairedDevice, setPairedDevice] = useState<StoredPairedDevice | null>(null);
   const [connectionState, setConnectionState] = useState<ConnectionState>("loading");
   const [transportError, setTransportError] = useState<string | null>(null);
   const [sessionStatus, setSessionStatus] = useState<SessionStatus | "disconnected">("disconnected");
-  const [currentTask, setCurrentTask] = useState("Awaiting the first session summary from relay.");
+  const [currentTask, setCurrentTask] = useState<string | null>(null);
   const [lastActivityAt, setLastActivityAt] = useState<string | null>(null);
-  const [outputLines, setOutputLines] = useState<string[]>([
-    "[browser] waiting for relay subscription...",
-  ]);
+  const [outputLines, setOutputLines] = useState<string[]>([]);
   const [approvalRequests, setApprovalRequests] = useState<ApprovalRequestedPayload[]>([]);
   const [prompt, setPrompt] = useState("");
   const [isSending, setIsSending] = useState(false);
   const clientRef = useRef<BrowserRelayClient | null>(null);
+  const messagesRef = useRef(messages);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   useEffect(() => {
     const storedDevice = loadStoredPairedDevice();
@@ -103,7 +95,9 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
           }
 
           setSessionStatus(message.payload.status);
-          setCurrentTask(message.payload.currentTask ?? "Desktop session is connected.");
+          setCurrentTask(
+            message.payload.currentTask ?? messagesRef.current.sessionDetail.currentTaskConnected,
+          );
           setLastActivityAt(message.payload.lastActivityAt);
           break;
         case "SessionOutputDelta":
@@ -114,21 +108,29 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
           setOutputLines((current) =>
             appendOutputLine(
               current,
-              `${message.payload.stream === "stderr" ? "[stderr]" : "[stdout]"} ${message.payload.delta}`,
+              `[${getStreamLabel(messagesRef.current, message.payload.stream)}] ${message.payload.delta}`,
             ),
           );
           break;
         case "SessionStateChanged":
+        {
           if (message.payload.sessionId !== sessionId) {
             return;
           }
 
+          const reason = message.payload.reason;
           setSessionStatus(message.payload.status);
           setLastActivityAt(new Date().toISOString());
-          if (message.payload.reason) {
-            setOutputLines((current) => appendOutputLine(current, `[state] ${message.payload.reason}`));
+          if (reason) {
+            setOutputLines((current) =>
+              appendOutputLine(
+                current,
+                messagesRef.current.sessionDetail.outputStateReason(reason),
+              ),
+            );
           }
           break;
+        }
         case "ApprovalRequested":
           if (message.payload.sessionId !== sessionId) {
             return;
@@ -178,7 +180,9 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
 
         setConnectionState("connected");
         await relayClient.subscribe(sessionId);
-        setOutputLines((current) => appendOutputLine(current, `[browser] subscribed to ${sessionId}`));
+        setOutputLines((current) =>
+          appendOutputLine(current, messagesRef.current.sessionDetail.outputSubscribed(sessionId)),
+        );
       })
       .catch((error: unknown) => {
         if (closed) {
@@ -226,7 +230,7 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
 
     await runTransportAction(
       () => clientRef.current!.sendPrompt(sessionId, trimmedPrompt),
-      `[browser] prompt queued: ${trimmedPrompt}`,
+      messages.sessionDetail.outputPromptQueued(trimmedPrompt),
     );
     setPrompt("");
   }
@@ -234,7 +238,10 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
   async function handleApprovalDecision(approvalId: string, decision: "allow" | "deny") {
     await runTransportAction(
       () => clientRef.current!.respondToApproval(sessionId, approvalId, decision),
-      `[browser] approval ${approvalId} -> ${decision}`,
+      messages.sessionDetail.outputApprovalDecision(
+        approvalId,
+        getDecisionLabel(messages, decision),
+      ),
     );
 
     setApprovalRequests((current) => current.filter((request) => request.approvalId !== approvalId));
@@ -243,14 +250,14 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
   async function handleResumeDesktopControl() {
     await runTransportAction(
       () => clientRef.current!.resumeDesktopControl(sessionId),
-      "[browser] requested desktop control handoff",
+      messages.sessionDetail.outputResumeControl,
     );
   }
 
   async function handleInterruptSession() {
     await runTransportAction(
-      () => clientRef.current!.interruptSession(sessionId, "mobile operator interrupt"),
-      "[browser] interrupt requested for the active session",
+      () => clientRef.current!.interruptSession(sessionId, messages.sessionDetail.interruptReason),
+      messages.sessionDetail.outputInterrupt,
     );
   }
 
@@ -258,26 +265,20 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
     return (
       <div className="page-stack">
         <section className="hero-card">
-          <p className="eyebrow">Session Detail</p>
+          <p className="eyebrow">{messages.sessionDetail.heroEyebrow}</p>
           <h1>{sessionId}</h1>
-          <p className="lede">
-            This route is ready for realtime subscription, but the browser has no paired device id
-            in local storage yet.
-          </p>
+          <p className="lede">{messages.sessionDetail.missingPairingLede}</p>
         </section>
 
         <section className="empty-card stack-card">
-          <h2>Pair this phone before subscribing</h2>
-          <p className="muted">
-            The session-detail shell only opens relay WebSocket traffic with a paired browser
-            identity. Start from the pair route, then return here.
-          </p>
+          <h2>{messages.sessionDetail.missingPairingTitle}</h2>
+          <p className="muted">{messages.sessionDetail.missingPairingDescription}</p>
           <div className="actions-row">
             <Link href="/pair" className="button-primary">
-              Go to pair
+              {messages.sessionDetail.goToPair}
             </Link>
             <Link href="/sessions" className="button-secondary">
-              Back to sessions
+              {messages.sessionDetail.backToSessions}
             </Link>
           </div>
         </section>
@@ -288,16 +289,15 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
   return (
     <div className="page-stack">
       <section className="hero-card">
-        <p className="eyebrow">Session Detail</p>
+        <p className="eyebrow">{messages.sessionDetail.heroEyebrow}</p>
         <h1>{sessionId}</h1>
-        <p className="lede">
-          The feature shell owns subscription setup, prompt submission, approval responses, and the
-          explicit return-control command while the route stays composition-only.
-        </p>
+        <p className="lede">{messages.sessionDetail.heroLede}</p>
         <div className="chip-row">
-          <span className={statusChipClass(sessionStatus)}>{sessionStatus}</span>
+          <span className={statusChipClass(sessionStatus)}>
+            {getSessionStatusLabel(messages, sessionStatus)}
+          </span>
           <span className={connectionState === "connected" ? "status-chip status-chip--live" : "status-chip"}>
-            {connectionState}
+            {getConnectionStateLabel(messages, connectionState)}
           </span>
           {pairedDevice ? <span className="status-chip">{pairedDevice.deviceId}</span> : null}
         </div>
@@ -305,17 +305,23 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
 
       <section className="section-card stack-card">
         <div className="section-head">
-          <p className="eyebrow">Session State</p>
-          <h2 className="section-title">{currentTask}</h2>
-          <p className="section-subtitle">Last activity: {formatTimestamp(lastActivityAt)}</p>
+          <p className="eyebrow">{messages.sessionDetail.stateEyebrow}</p>
+          <h2 className="section-title">
+            {currentTask ?? messages.sessionDetail.currentTaskWaitingSummary}
+          </h2>
+          <p className="section-subtitle">
+            {messages.sessionDetail.lastActivityLabel}:{" "}
+            {formatLocaleTimestamp(locale, messages, lastActivityAt)}
+          </p>
         </div>
         {transportError ? (
           <p className="status-note status-note--danger" role="alert">
-            {transportError}
+            {translateClientError(messages, transportError)}
           </p>
         ) : (
           <p className="status-note">
-            Relay origin: {pairedDevice?.relayOrigin ?? "waiting for paired device"}
+            {messages.sessionDetail.relayOriginLabel}:{" "}
+            {pairedDevice?.relayOrigin ?? messages.common.waitingPairedDevice}
           </p>
         )}
         <div className="actions-row">
@@ -325,7 +331,7 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
             onClick={handleResumeDesktopControl}
             disabled={isSending || connectionState !== "connected"}
           >
-            Return control to desktop
+            {messages.sessionDetail.returnControl}
           </button>
           <button
             type="button"
@@ -333,26 +339,25 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
             onClick={handleInterruptSession}
             disabled={isSending || connectionState !== "connected"}
           >
-            Interrupt session
+            {messages.sessionDetail.interruptSession}
           </button>
         </div>
       </section>
 
       <section className="terminal-panel">
         <div className="section-head">
-          <p className="eyebrow">Realtime Output</p>
-          <h2 className="section-title">Stream shell</h2>
-          <p className="terminal-note">
-            Transport ownership stays under `lib/realtime`; the feature renders a mobile-readable
-            feed from the parsed protocol envelopes.
-          </p>
+          <p className="eyebrow">{messages.sessionDetail.outputEyebrow}</p>
+          <h2 className="section-title">{messages.sessionDetail.outputTitle}</h2>
+          <p className="terminal-note">{messages.sessionDetail.outputNote}</p>
         </div>
-        <div className="terminal-output" aria-label="Session output stream">
-          {outputLines.map((line, index) => (
+        <div className="terminal-output" aria-label={messages.sessionDetail.outputAriaLabel}>
+          {(outputLines.length === 0 ? [messages.sessionDetail.outputWaiting] : outputLines).map(
+            (line, index) => (
             <p key={`${line}-${index}`} className="terminal-line">
               {line}
             </p>
-          ))}
+          ),
+          )}
         </div>
       </section>
 
@@ -373,21 +378,18 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
         </div>
       ) : (
         <section className="section-card stack-card">
-          <p className="eyebrow">Approvals</p>
-          <p className="muted">
-            No approval request is currently queued for this browser. When the desktop side pauses
-            for approval, the request will surface here.
-          </p>
+          <p className="eyebrow">{messages.sessionDetail.approvalsEyebrow}</p>
+          <p className="muted">{messages.sessionDetail.noApprovals}</p>
         </section>
       )}
 
       <section className="section-card">
         <div className="section-head">
-          <p className="eyebrow">Boundaries</p>
-          <h2 className="section-title">What stays out of the page layer</h2>
+          <p className="eyebrow">{messages.sessionDetail.boundariesEyebrow}</p>
+          <h2 className="section-title">{messages.sessionDetail.boundariesTitle}</h2>
         </div>
         <dl className="detail-grid">
-          {sessionFacts.map((fact) => (
+          {messages.sessionDetail.facts.map((fact) => (
             <div key={fact.label} className="detail-kv">
               <dt>{fact.label}</dt>
               <dd>{fact.value}</dd>
@@ -398,7 +400,7 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
 
       <form className="prompt-bar" onSubmit={handlePromptSubmit}>
         <label className="prompt-label" htmlFor="prompt">
-          Queue the next instruction for the desktop session.
+          {messages.sessionDetail.promptLabel}
         </label>
         <div className="prompt-row">
           <input
@@ -406,7 +408,7 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
             name="prompt"
             className="prompt-input"
             type="text"
-            placeholder="Ask the desktop side to inspect the next file..."
+            placeholder={messages.sessionDetail.promptPlaceholder}
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
           />
@@ -415,7 +417,7 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
             className="button-primary"
             disabled={isSending || connectionState !== "connected"}
           >
-            Send prompt
+            {messages.sessionDetail.sendPrompt}
           </button>
         </div>
       </form>

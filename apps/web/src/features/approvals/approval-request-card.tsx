@@ -1,3 +1,7 @@
+"use client";
+
+import { useMessages } from "../../lib/i18n/provider.tsx";
+
 export interface ApprovalRequestCardProps {
   approvalId: string;
   prompt: string;
@@ -13,12 +17,18 @@ export function ApprovalRequestCard({
   disabled = false,
   onDecision,
 }: ApprovalRequestCardProps) {
+  const messages = useMessages();
+
   return (
     <section className="approval-card">
-      <p className="eyebrow">Approval</p>
+      <p className="eyebrow">{messages.approval.eyebrow}</p>
       <h2>{prompt}</h2>
-      <p className="section-subtitle">Approval id: {approvalId}</p>
-      <p className="section-subtitle">Issued at: {issuedAt}</p>
+      <p className="section-subtitle">
+        {messages.approval.approvalId}: {approvalId}
+      </p>
+      <p className="section-subtitle">
+        {messages.approval.issuedAt}: {issuedAt}
+      </p>
       <div className="actions-row">
         <button
           type="button"
@@ -26,7 +36,7 @@ export function ApprovalRequestCard({
           onClick={() => onDecision("allow")}
           disabled={disabled}
         >
-          Allow
+          {messages.approval.allow}
         </button>
         <button
           type="button"
@@ -34,7 +44,7 @@ export function ApprovalRequestCard({
           onClick={() => onDecision("deny")}
           disabled={disabled}
         >
-          Deny
+          {messages.approval.deny}
         </button>
       </div>
     </section>

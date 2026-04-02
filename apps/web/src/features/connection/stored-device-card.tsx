@@ -8,9 +8,11 @@ import {
   loadStoredPairedDevice,
   type StoredPairedDevice,
 } from "../../lib/storage/device-store.ts";
+import { useMessages } from "../../lib/i18n/provider.tsx";
 
 export function StoredDeviceCard() {
   const [pairedDevice, setPairedDevice] = useState<StoredPairedDevice | null | undefined>(undefined);
+  const messages = useMessages();
 
   useEffect(() => {
     setPairedDevice(loadStoredPairedDevice());
@@ -24,8 +26,8 @@ export function StoredDeviceCard() {
   if (pairedDevice === undefined) {
     return (
       <section className="section-card stack-card">
-        <p className="eyebrow">Pairing Cache</p>
-        <p className="muted">Checking browser storage for an existing paired device...</p>
+        <p className="eyebrow">{messages.storedDevice.eyebrow}</p>
+        <p className="muted">{messages.storedDevice.checking}</p>
       </section>
     );
   }
@@ -33,15 +35,12 @@ export function StoredDeviceCard() {
   if (!pairedDevice) {
     return (
       <section className="empty-card stack-card">
-        <p className="eyebrow">Pairing Cache</p>
-        <h2>No paired browser device yet</h2>
-        <p className="muted">
-          Pair this phone first so the session detail route can open a relay subscription with a
-          registered browser device id.
-        </p>
+        <p className="eyebrow">{messages.storedDevice.eyebrow}</p>
+        <h2>{messages.storedDevice.emptyTitle}</h2>
+        <p className="muted">{messages.storedDevice.emptyDescription}</p>
         <div className="actions-row">
           <Link href="/pair" className="button-primary">
-            Pair this phone
+            {messages.storedDevice.pairPhone}
           </Link>
         </div>
       </section>
@@ -51,20 +50,20 @@ export function StoredDeviceCard() {
   return (
     <section className="section-card stack-card">
       <div className="section-head">
-        <p className="eyebrow">Paired Browser Device</p>
-        <h2 className="section-title">Local relay identity is ready</h2>
+        <p className="eyebrow">{messages.storedDevice.sectionEyebrow}</p>
+        <h2 className="section-title">{messages.storedDevice.sectionTitle}</h2>
       </div>
       <dl className="detail-grid">
         <div className="detail-kv">
-          <dt>Device id</dt>
+          <dt>{messages.storedDevice.deviceId}</dt>
           <dd>{pairedDevice.deviceId}</dd>
         </div>
         <div className="detail-kv">
-          <dt>Relay origin</dt>
+          <dt>{messages.storedDevice.relayOrigin}</dt>
           <dd>{pairedDevice.relayOrigin}</dd>
         </div>
         <div className="detail-kv">
-          <dt>Paired at</dt>
+          <dt>{messages.storedDevice.pairedAt}</dt>
           <dd>{pairedDevice.pairedAt}</dd>
         </div>
       </dl>
@@ -77,10 +76,10 @@ export function StoredDeviceCard() {
       </div>
       <div className="actions-row">
         <Link href="/pair" className="button-secondary">
-          Refresh pairing
+          {messages.storedDevice.refreshPairing}
         </Link>
         <button type="button" className="button-ghost" onClick={handleForgetPairing}>
-          Forget local pairing
+          {messages.storedDevice.forgetPairing}
         </button>
       </div>
     </section>

@@ -1,37 +1,35 @@
-const recoverySteps = [
-  "Check whether the desktop relay connection is still active.",
-  "Retry the WebSocket subscription through the realtime boundary.",
-  "Reconnect with the paired identity instead of re-running the whole pairing flow.",
-  "Escalate to desktop recovery only after the mobile shell reports the degraded state clearly.",
-];
+"use client";
+
+import Link from "next/link";
+
+import { useMessages } from "../../lib/i18n/provider.tsx";
 
 export default function ConnectionErrorPage() {
+  const messages = useMessages();
+
   return (
     <div className="page-stack">
       <section className="empty-card">
-        <p className="eyebrow">Connection Error</p>
-        <h1>Keep recovery clear when the live link degrades.</h1>
-        <p className="lede">
-          This screen explains the current failure, offers the next safe action, and avoids hiding
-          transport concerns inside the page component.
-        </p>
+        <p className="eyebrow">{messages.connectionError.eyebrow}</p>
+        <h1>{messages.connectionError.title}</h1>
+        <p className="lede">{messages.connectionError.lede}</p>
         <div className="actions-row">
-          <button type="button" className="button-primary">
-            Retry connection
+          <button type="button" className="button-primary" onClick={() => window.location.reload()}>
+            {messages.connectionError.retry}
           </button>
-          <button type="button" className="button-ghost">
-            Open pairing page
-          </button>
+          <Link href="/pair" className="button-ghost">
+            {messages.connectionError.openPairing}
+          </Link>
         </div>
       </section>
 
       <section className="section-card">
         <div className="section-head">
-          <p className="eyebrow">Recovery</p>
-          <h2 className="section-title">Suggested next actions</h2>
+          <p className="eyebrow">{messages.connectionError.recoveryEyebrow}</p>
+          <h2 className="section-title">{messages.connectionError.recoveryTitle}</h2>
         </div>
         <ul className="list">
-          {recoverySteps.map((step) => (
+          {messages.connectionError.steps.map((step) => (
             <li key={step}>{step}</li>
           ))}
         </ul>
