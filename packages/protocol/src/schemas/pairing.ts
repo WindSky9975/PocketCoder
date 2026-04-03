@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { createEnvelopeSchema } from "./envelope.js";
+import { createEnvelopeSchema } from "./envelope.ts";
 
 export const pairingInitPayloadSchema = z.object({
   pairingToken: z.string().min(1),

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { MESSAGE_TYPE_VALUES, type MessageType } from "../constants/message-types.js";
-import { PROTOCOL_VERSION } from "../constants/protocol-version.js";
+import { MESSAGE_TYPE_VALUES, type MessageType } from "../constants/message-types.ts";
+import { PROTOCOL_VERSION } from "../constants/protocol-version.ts";
 
 export const protocolVersionSchema = z.literal(PROTOCOL_VERSION);
 export const messageIdSchema = z.string().min(1);

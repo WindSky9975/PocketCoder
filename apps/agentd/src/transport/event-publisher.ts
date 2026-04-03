@@ -15,6 +15,7 @@ import type { RelayClient } from "./relay-client.js";
 
 export interface AgentdEventPublisher {
   publishSessionSummary(record: SessionRecord): Promise<void>;
+  publishSessionStateChange(record: SessionRecord, reason?: string): Promise<void>;
   publishProviderEvent(event: CodexProviderEvent, record: SessionRecord): Promise<void>;
 }
 
@@ -36,6 +37,9 @@ export function createEventPublisher(relayClient: RelayClient): AgentdEventPubli
           },
         }),
       );
+    },
+    async publishSessionStateChange(record, reason) {
+      await relayClient.publish(createSessionStateChangedEnvelope(record, reason));
     },
     async publishProviderEvent(event, record) {
       const outbound = mapProviderEvent(event, record);
@@ -89,27 +93,40 @@ function mapProviderEvent(
     event.type === "session.error" ||
     event.type === "session.ended"
   ) {
-    const status =
-      typeof event.payload.status === "string"
-        ? (event.payload.status as SessionStatus)
-        : record.status;
-
-    return sessionStateChangedEnvelopeSchema.parse({
-      protocolVersion: PROTOCOL_VERSION,
-      messageId: createMessageId("evt"),
-      timestamp,
-      type: "SessionStateChanged",
-      payload: {
-        sessionId: record.sessionId,
-        status,
-        ...(typeof event.payload.reason === "string"
-          ? { reason: event.payload.reason }
-          : event.type === "session.error"
-            ? { reason: "provider-error" }
-            : {}),
+    return createSessionStateChangedEnvelope(
+      {
+        ...record,
+        status:
+          typeof event.payload.status === "string"
+            ? (event.payload.status as SessionStatus)
+            : record.status,
       },
-    });
+      typeof event.payload.reason === "string"
+        ? event.payload.reason
+        : event.type === "session.error"
+          ? "provider-error"
+          : undefined,
+      timestamp,
+    );
   }
 
   return null;
+}
+
+function createSessionStateChangedEnvelope(
+  record: SessionRecord,
+  reason?: string,
+  timestamp = new Date().toISOString(),
+): Extract<ProtocolEventEnvelope, { type: "SessionStateChanged" }> {
+  return sessionStateChangedEnvelopeSchema.parse({
+    protocolVersion: PROTOCOL_VERSION,
+    messageId: createMessageId("evt"),
+    timestamp,
+    type: "SessionStateChanged",
+    payload: {
+      sessionId: record.sessionId,
+      status: record.status,
+      ...(reason ? { reason } : {}),
+    },
+  });
 }

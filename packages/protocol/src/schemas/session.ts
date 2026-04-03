@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { SESSION_STATUS_VALUES } from "../constants/session-status.js";
-import { createEnvelopeSchema } from "./envelope.js";
+import { SESSION_STATUS_VALUES } from "../constants/session-status.ts";
+import { createEnvelopeSchema } from "./envelope.ts";
 
 export const sessionStatusSchema = z.enum(SESSION_STATUS_VALUES);
 

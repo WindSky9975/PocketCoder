@@ -6,20 +6,20 @@ import {
   interruptSessionEnvelopeSchema,
   resumeDesktopControlEnvelopeSchema,
   sendPromptEnvelopeSchema,
-} from "./command.js";
-import { errorEnvelopeSchema } from "./error.js";
+} from "./command.ts";
+import { errorEnvelopeSchema } from "./error.ts";
 import {
   deviceRegisteredEnvelopeSchema,
   pairingConfirmEnvelopeSchema,
   pairingInitEnvelopeSchema,
-} from "./pairing.js";
+} from "./pairing.ts";
 import {
   approvalRequestedEnvelopeSchema,
   sessionOutputDeltaEnvelopeSchema,
   sessionStateChangedEnvelopeSchema,
   sessionSubscribeEnvelopeSchema,
   sessionSummaryEnvelopeSchema,
-} from "./session.js";
+} from "./session.ts";
 
 export const protocolCommandEnvelopeSchema = z.discriminatedUnion("type", [
   pairingInitEnvelopeSchema,

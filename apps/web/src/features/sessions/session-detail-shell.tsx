@@ -59,10 +59,18 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
   const [isSending, setIsSending] = useState(false);
   const clientRef = useRef<BrowserRelayClient | null>(null);
   const messagesRef = useRef(messages);
+  const canSendRemoteCommands =
+    connectionState === "connected" && sessionStatus !== "disconnected" && !isSending;
 
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
+
+  useEffect(() => {
+    if (sessionStatus === "disconnected") {
+      setApprovalRequests([]);
+    }
+  }, [sessionStatus]);
 
   useEffect(() => {
     const storedDevice = loadStoredPairedDevice();
@@ -329,7 +337,7 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
             type="button"
             className="button-secondary"
             onClick={handleResumeDesktopControl}
-            disabled={isSending || connectionState !== "connected"}
+            disabled={!canSendRemoteCommands}
           >
             {messages.sessionDetail.returnControl}
           </button>
@@ -337,7 +345,7 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
             type="button"
             className="button-ghost"
             onClick={handleInterruptSession}
-            disabled={isSending || connectionState !== "connected"}
+            disabled={!canSendRemoteCommands}
           >
             {messages.sessionDetail.interruptSession}
           </button>
@@ -369,7 +377,7 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
               approvalId={request.approvalId}
               prompt={request.prompt}
               issuedAt={request.issuedAt}
-              disabled={isSending || connectionState !== "connected"}
+              disabled={!canSendRemoteCommands}
               onDecision={(decision) => {
                 void handleApprovalDecision(request.approvalId, decision);
               }}
@@ -415,7 +423,7 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
           <button
             type="submit"
             className="button-primary"
-            disabled={isSending || connectionState !== "connected"}
+            disabled={!canSendRemoteCommands}
           >
             {messages.sessionDetail.sendPrompt}
           </button>

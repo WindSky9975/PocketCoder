@@ -244,4 +244,48 @@ describe("relay security and dedupe", () => {
     assert.equal(subscription.replay[0]?.type, "SessionSummary");
     assert.equal(subscription.replay[0]?.payload.sessionId, "session-1");
   });
+
+  it("rejects remote commands after desktop control has been recovered locally", () => {
+    const storage = createRelayStorage();
+    const connections = createConnectionRegistry();
+    const replay = createReplayService(storage.replayEvents, 60_000);
+    const sessions = createSessionRelayService({
+      routes: storage.sessionRoutes,
+      commandDedupe: storage.commandReceipts,
+      replay,
+      connections,
+    });
+
+    storage.sessionRoutes.save({
+      sessionId: "session-1",
+      ownerDeviceId: "desktop-1",
+      provider: "codex",
+      status: "disconnected",
+      lastStateReason: "local-recovery",
+      lastActivityAt: "2026-04-03T10:00:00.000Z",
+      updatedAt: "2026-04-03T10:00:00.000Z",
+    });
+
+    assert.throws(
+      () =>
+        sessions.handleControlCommand(
+          "browser-1",
+          { deviceId: "browser-1", scopes: ["session:write"], revokedAt: null },
+          {
+            protocolVersion: "1.0.0",
+            messageId: "cmd-after-recovery",
+            timestamp: "2026-04-03T10:00:01.000Z",
+            type: "SendPrompt",
+            payload: {
+              sessionId: "session-1",
+              prompt: "should be rejected",
+            },
+          },
+        ),
+      (error: unknown) =>
+        error instanceof Error &&
+        "code" in error &&
+        error.code === "REMOTE_CONTROL_REVOKED",
+    );
+  });
 });

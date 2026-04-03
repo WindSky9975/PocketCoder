@@ -5,6 +5,7 @@ export interface SessionRouteRecord {
   ownerDeviceId: string;
   provider?: string;
   status?: SessionStatus;
+  lastStateReason?: string;
   currentTask?: string;
   lastActivityAt?: string;
   updatedAt: string;

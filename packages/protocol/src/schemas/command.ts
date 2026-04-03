@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { messageIdSchema, createEnvelopeSchema } from "./envelope.js";
+import { messageIdSchema, createEnvelopeSchema } from "./envelope.ts";
 
 export const approvalDecisionSchema = z.enum(["allow", "deny"]);
 

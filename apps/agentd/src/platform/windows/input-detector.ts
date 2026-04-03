@@ -9,10 +9,36 @@ export interface InputDetector {
 }
 
 export function createInputDetector(): InputDetector {
+  const listeners = new Set<(signal: LocalInputSignal) => void>();
+
   return {
     subscribe(onInput) {
-      void onInput;
-      return () => undefined;
+      listeners.add(onInput);
+      return () => {
+        listeners.delete(onInput);
+      };
+    },
+  };
+}
+
+export interface ManualInputDetector extends InputDetector {
+  emit(signal: LocalInputSignal): void;
+}
+
+export function createManualInputDetector(): ManualInputDetector {
+  const listeners = new Set<(signal: LocalInputSignal) => void>();
+
+  return {
+    subscribe(onInput) {
+      listeners.add(onInput);
+      return () => {
+        listeners.delete(onInput);
+      };
+    },
+    emit(signal) {
+      for (const listener of listeners) {
+        listener(signal);
+      }
     },
   };
 }

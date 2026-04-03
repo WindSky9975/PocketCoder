@@ -20,11 +20,12 @@ export function createInitialControlState(sessionId: string): DesktopControlSnap
 export function markDesktopControlRecovered(
   snapshot: DesktopControlSnapshot,
   source: DesktopControlSource,
+  recoveredAt = new Date().toISOString(),
 ): DesktopControlSnapshot {
   return {
     ...snapshot,
     status: "desktop-recovered",
     source,
-    recoveredAt: new Date().toISOString(),
+    recoveredAt,
   };
 }

@@ -228,8 +228,39 @@ describe("agentd event flow and approval handoff", () => {
 
     assert.equal(codexWrites[0], "inspect session route metadata");
     assert.equal(codexWrites[1], "__stopped__");
-    assert.equal(running?.status, "running");
-    assert.equal(disconnected?.status, "disconnected");
+    assert.equal(running.updatedSession?.status, "running");
+    assert.equal(disconnected.updatedSession?.status, "disconnected");
+  });
+
+  it("publishes explicit session-state updates for desktop control recovery", async () => {
+    const published: unknown[] = [];
+    const eventPublisher = createEventPublisher({
+      async connect() {
+        return undefined;
+      },
+      async publish(message: unknown) {
+        published.push(message);
+      },
+      async disconnect() {
+        return undefined;
+      },
+    });
+
+    await eventPublisher.publishSessionStateChange(
+      {
+        sessionId: "session-1",
+        provider: "codex",
+        status: "disconnected",
+        lastActivityAt: "2026-04-03T10:00:00.000Z",
+      },
+      "local-recovery",
+    );
+
+    assert.equal((published[0] as { type: string }).type, "SessionStateChanged");
+    assert.equal(
+      (published[0] as { payload: { reason: string } }).payload.reason,
+      "local-recovery",
+    );
   });
 
   it("keeps the runtime root anchored to the agent workspace instead of process cwd", () => {

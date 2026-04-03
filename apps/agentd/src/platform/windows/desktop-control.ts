@@ -3,39 +3,57 @@ import {
   markDesktopControlRecovered,
   type DesktopControlSnapshot,
 } from "./control-state.js";
-import type { InputDetector, LocalInputSignal } from "./input-detector.js";
+import type { LocalInputSignal } from "./input-detector.js";
+
+export interface DesktopControlRecoveryEvent {
+  sessionId: string;
+  source: "command" | "local-input";
+  reason: "remote-control-revoked" | "local-recovery";
+  recoveredAt: string;
+}
 
 export interface DesktopControlBoundary {
   getSnapshot(): DesktopControlSnapshot;
-  markRemoteControlReleased(): DesktopControlSnapshot;
-  handleLocalInput(signal: LocalInputSignal): DesktopControlSnapshot;
+  canAcceptRemoteCommands(): boolean;
+  markRemoteControlReleased(): DesktopControlRecoveryEvent | null;
+  handleLocalInput(signal: LocalInputSignal): DesktopControlRecoveryEvent | null;
 }
 
-export function createDesktopControlBoundary(
-  sessionId: string,
-  detector?: InputDetector,
-): DesktopControlBoundary {
+export function createDesktopControlBoundary(sessionId: string): DesktopControlBoundary {
   let snapshot = createInitialControlState(sessionId);
-
-  detector?.subscribe((signal: LocalInputSignal) => {
-    if (signal.sessionId === sessionId) {
-      snapshot = markDesktopControlRecovered(snapshot, "local-input");
-    }
-  });
 
   return {
     getSnapshot() {
       return snapshot;
     },
+    canAcceptRemoteCommands() {
+      return snapshot.status === "remote-active";
+    },
     markRemoteControlReleased() {
+      if (snapshot.status !== "remote-active") {
+        return null;
+      }
+
       snapshot = markDesktopControlRecovered(snapshot, "command");
-      return snapshot;
+      return {
+        sessionId,
+        source: "command",
+        reason: "remote-control-revoked",
+        recoveredAt: snapshot.recoveredAt ?? new Date().toISOString(),
+      };
     },
     handleLocalInput(signal) {
-      if (signal.sessionId === sessionId) {
-        snapshot = markDesktopControlRecovered(snapshot, "local-input");
+      if (signal.sessionId !== sessionId || snapshot.status !== "remote-active") {
+        return null;
       }
-      return snapshot;
+
+      snapshot = markDesktopControlRecovered(snapshot, "local-input", signal.detectedAt);
+      return {
+        sessionId,
+        source: "local-input",
+        reason: "local-recovery",
+        recoveredAt: snapshot.recoveredAt ?? signal.detectedAt,
+      };
     },
   };
 }

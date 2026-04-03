@@ -47,31 +47,41 @@ export function SessionListShell() {
     }
 
     let cancelled = false;
-    setIsLoadingSessions(true);
-    setSessionLoadError(null);
+    const loadSessions = async (showLoading: boolean) => {
+      if (showLoading) {
+        setIsLoadingSessions(true);
+      }
 
-    void fetchRelaySessionDirectory({
-      relayOrigin: pairedDevice.relayOrigin,
-      deviceId: pairedDevice.deviceId,
-    })
-      .then((nextSessions) => {
+      setSessionLoadError(null);
+
+      try {
+        const nextSessions = await fetchRelaySessionDirectory({
+          relayOrigin: pairedDevice.relayOrigin,
+          deviceId: pairedDevice.deviceId,
+        });
+
         if (!cancelled) {
           setSessions(nextSessions);
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         if (!cancelled) {
           setSessionLoadError(error instanceof Error ? error.message : "relay command failed");
         }
-      })
-      .finally(() => {
-        if (!cancelled) {
+      } finally {
+        if (!cancelled && showLoading) {
           setIsLoadingSessions(false);
         }
-      });
+      }
+    };
+
+    void loadSessions(true);
+    const timer = globalThis.setInterval(() => {
+      void loadSessions(false);
+    }, 5_000);
 
     return () => {
       cancelled = true;
+      globalThis.clearInterval(timer);
     };
   }, [pairedDevice]);
 

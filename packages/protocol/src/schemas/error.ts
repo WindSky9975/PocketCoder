@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { ERROR_CODE_VALUES } from "../errors/codes.js";
-import { createEnvelopeSchema } from "./envelope.js";
+import { ERROR_CODE_VALUES } from "../errors/codes.ts";
+import { createEnvelopeSchema } from "./envelope.ts";
 
 export const errorCodeSchema = z.enum(ERROR_CODE_VALUES);
 

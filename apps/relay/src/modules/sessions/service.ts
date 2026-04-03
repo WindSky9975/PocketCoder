@@ -150,6 +150,22 @@ export function createSessionRelayService(args: {
         });
       }
 
+      if (
+        route.status === "disconnected" &&
+        (route.lastStateReason === "local-recovery" ||
+          route.lastStateReason === "remote-control-revoked")
+      ) {
+        throw new RelayProtocolError({
+          code: "REMOTE_CONTROL_REVOKED",
+          statusCode: 409,
+          message: "remote control is no longer active for this session",
+          details: {
+            sessionId,
+            reason: route.lastStateReason,
+          },
+        });
+      }
+
       const target = args.connections.getLatestByDeviceId(route.ownerDeviceId);
       if (!target) {
         throw new RelayProtocolError({
@@ -186,6 +202,7 @@ function buildSessionRouteRecord(args: {
     ownerDeviceId: args.sourceDeviceId,
     provider: currentRoute?.provider,
     status: currentRoute?.status,
+    lastStateReason: currentRoute?.lastStateReason,
     currentTask: currentRoute?.currentTask,
     lastActivityAt: currentRoute?.lastActivityAt,
     updatedAt: args.envelope.timestamp,
@@ -196,6 +213,10 @@ function buildSessionRouteRecord(args: {
       ...baseRecord,
       provider: args.envelope.payload.provider,
       status: args.envelope.payload.status,
+      lastStateReason:
+        args.envelope.payload.status === "disconnected"
+          ? currentRoute?.lastStateReason
+          : undefined,
       currentTask: args.envelope.payload.currentTask,
       lastActivityAt: args.envelope.payload.lastActivityAt,
     };
@@ -205,6 +226,7 @@ function buildSessionRouteRecord(args: {
     return {
       ...baseRecord,
       status: args.envelope.payload.status,
+      lastStateReason: args.envelope.payload.reason,
       lastActivityAt: args.envelope.timestamp,
     };
   }
@@ -213,6 +235,7 @@ function buildSessionRouteRecord(args: {
     return {
       ...baseRecord,
       status: "waiting_approval",
+      lastStateReason: undefined,
       currentTask: args.envelope.payload.prompt,
       lastActivityAt: args.envelope.payload.issuedAt,
     };
