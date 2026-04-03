@@ -1,4 +1,5 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "target": "ES2022",
     "lib": [
@@ -19,6 +20,9 @@
     "incremental": true,
     "baseUrl": ".",
     "paths": {
+      "@pocketcoder/protocol": [
+        "../../packages/protocol/src/index.ts"
+      ],
       "@/*": [
         "./src/*"
       ]
