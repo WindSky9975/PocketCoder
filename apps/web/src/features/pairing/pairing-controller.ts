@@ -14,6 +14,16 @@ export interface PairingStartInput {
   fetchImpl?: typeof fetch;
 }
 
+export type PairingTokenInspectionReason = "invalid" | "expired" | "used" | "untrusted";
+
+export interface PairingTokenInspectionResult {
+  accepted: boolean;
+  desktopDeviceId?: string;
+  desktopPublicKey?: string;
+  expiresAt?: string;
+  reason?: PairingTokenInspectionReason;
+}
+
 export interface PairingStartPayload {
   pairingToken: string;
   deviceName: string;
@@ -43,6 +53,43 @@ export function buildPairingStartPayload(input: {
     pairingToken: input.token.trim(),
     deviceName: input.deviceName.trim(),
     publicKey: input.candidatePublicKey.trim(),
+  };
+}
+
+export async function inspectPairingToken(input: {
+  relayOrigin: string;
+  token: string;
+  fetchImpl?: typeof fetch;
+}): Promise<PairingTokenInspectionResult> {
+  const fetchImpl = input.fetchImpl ?? globalThis.fetch;
+  if (!fetchImpl) {
+    throw new Error("fetch is not available in this runtime");
+  }
+
+  const relayUrl = new URL("/pairing/token", input.relayOrigin);
+  relayUrl.searchParams.set("value", input.token.trim());
+  const response = await fetchImpl(relayUrl);
+  const payload = (await response.json()) as unknown;
+
+  if (!response.ok) {
+    throw new Error(`pairing failed with status ${response.status}`);
+  }
+
+  if (typeof payload !== "object" || payload === null || !("accepted" in payload)) {
+    throw new Error("pairing token inspection returned an invalid payload");
+  }
+
+  const inspection = payload as Partial<PairingTokenInspectionResult>;
+  return {
+    accepted: inspection.accepted === true,
+    ...(typeof inspection.desktopDeviceId === "string"
+      ? { desktopDeviceId: inspection.desktopDeviceId }
+      : {}),
+    ...(typeof inspection.desktopPublicKey === "string"
+      ? { desktopPublicKey: inspection.desktopPublicKey }
+      : {}),
+    ...(typeof inspection.expiresAt === "string" ? { expiresAt: inspection.expiresAt } : {}),
+    ...(typeof inspection.reason === "string" ? { reason: inspection.reason } : {}),
   };
 }
 

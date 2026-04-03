@@ -65,6 +65,7 @@ afterEach(() => {
 describe("pair to session-detail prompt main flow", () => {
   it("sends realtime commands and parses the session-detail event stream", async () => {
     const inboundTypes: string[] = [];
+    const transportStates: string[] = [];
     globalThis.WebSocket = MockWebSocket as unknown as typeof WebSocket;
 
     const client = createBrowserRelayClient({
@@ -72,6 +73,9 @@ describe("pair to session-detail prompt main flow", () => {
       deviceId: "browser-1",
       onMessage(message) {
         inboundTypes.push(message.type);
+      },
+      onTransportStateChange(state) {
+        transportStates.push(state);
       },
     });
 
@@ -128,5 +132,16 @@ describe("pair to session-detail prompt main flow", () => {
       "ResumeDesktopControl",
     ]);
     assert.deepEqual(inboundTypes, ["connected", "SessionOutputDelta", "ApprovalRequested"]);
+
+    socket?.close();
+    await client.connect();
+
+    const secondSocket = MockWebSocket.instances[1];
+    assert.ok(secondSocket);
+    assert.equal(
+      secondSocket?.url,
+      "wss://relay.example/ws?deviceId=browser-1&role=browser",
+    );
+    assert.deepEqual(transportStates, ["connected", "disconnected", "connected"]);
   });
 });

@@ -59,6 +59,8 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
   const [isSending, setIsSending] = useState(false);
   const clientRef = useRef<BrowserRelayClient | null>(null);
   const messagesRef = useRef(messages);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectAttemptRef = useRef(0);
   const canSendRemoteCommands =
     connectionState === "connected" && sessionStatus !== "disconnected" && !isSending;
 
@@ -88,6 +90,62 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
     }
 
     let closed = false;
+
+    function clearReconnectTimer() {
+      if (reconnectTimerRef.current !== null) {
+        globalThis.clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
+    }
+
+    async function connectAndSubscribe(isRetry: boolean) {
+      setConnectionState("connecting");
+      if (!isRetry) {
+        setTransportError(null);
+      }
+
+      try {
+        await relayClient.connect();
+        if (closed) {
+          return;
+        }
+
+        reconnectAttemptRef.current = 0;
+        setConnectionState("connected");
+        setTransportError(null);
+        await relayClient.subscribe(sessionId);
+        if (closed) {
+          return;
+        }
+
+        setOutputLines((current) =>
+          appendOutputLine(current, messagesRef.current.sessionDetail.outputSubscribed(sessionId)),
+        );
+      } catch (error: unknown) {
+        if (closed) {
+          return;
+        }
+
+        scheduleReconnect(
+          error instanceof Error ? error.message : "failed to connect to relay",
+        );
+      }
+    }
+
+    function scheduleReconnect(reason: string) {
+      if (closed || reconnectTimerRef.current !== null) {
+        return;
+      }
+
+      reconnectAttemptRef.current += 1;
+      const delayMs = Math.min(1_000 * reconnectAttemptRef.current, 5_000);
+      setTransportError(reason);
+      setConnectionState("connecting");
+      reconnectTimerRef.current = globalThis.setTimeout(() => {
+        reconnectTimerRef.current = null;
+        void connectAndSubscribe(true);
+      }, delayMs);
+    }
 
     function handleInboundMessage(message: RelayInboundMessage) {
       if (message.type === "connected") {
@@ -158,7 +216,7 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
           break;
         case "ErrorEnvelope":
           setTransportError(message.payload.message);
-          setConnectionState("error");
+          setConnectionState((current) => (current === "connected" ? current : "error"));
           break;
         default:
           break;
@@ -173,36 +231,33 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
           handleInboundMessage(message);
         }
       },
+      onTransportStateChange(state) {
+        if (closed) {
+          return;
+        }
+
+        if (state === "connected") {
+          setConnectionState("connected");
+          setTransportError(null);
+          return;
+        }
+
+        if (state === "error") {
+          setTransportError("browser failed to connect to relay");
+          return;
+        }
+
+        scheduleReconnect("browser failed to connect to relay");
+      },
     });
 
     clientRef.current = relayClient;
-    setConnectionState("connecting");
-    setTransportError(null);
-
-    void relayClient
-      .connect()
-      .then(async () => {
-        if (closed) {
-          return;
-        }
-
-        setConnectionState("connected");
-        await relayClient.subscribe(sessionId);
-        setOutputLines((current) =>
-          appendOutputLine(current, messagesRef.current.sessionDetail.outputSubscribed(sessionId)),
-        );
-      })
-      .catch((error: unknown) => {
-        if (closed) {
-          return;
-        }
-
-        setConnectionState("error");
-        setTransportError(error instanceof Error ? error.message : "failed to connect to relay");
-      });
+    reconnectAttemptRef.current = 0;
+    void connectAndSubscribe(false);
 
     return () => {
       closed = true;
+      clearReconnectTimer();
       clientRef.current = null;
       void relayClient.disconnect();
     };
