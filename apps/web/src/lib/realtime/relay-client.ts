@@ -27,6 +27,8 @@ export type RelayInboundMessage =
     }
   | ReturnType<typeof parseProtocolEnvelope>;
 
+export type RelayTransportState = "connected" | "disconnected" | "error";
+
 export interface BrowserRelayClient {
   connect(): Promise<void>;
   subscribe(sessionId: string): Promise<void>;
@@ -47,9 +49,11 @@ export function createBrowserRelayClient(args: {
   relayUrl: string;
   deviceId: string;
   onMessage?: (message: RelayInboundMessage) => void;
+  onTransportStateChange?: (state: RelayTransportState) => void;
 }): BrowserRelayClient {
   const WebSocketConstructor = globalThis.WebSocket as unknown as BrowserWebSocketConstructor | undefined;
   let socket: BrowserWebSocket | null = null;
+  let manualClose = false;
 
   function ensureSocket(): BrowserWebSocket {
     if (!socket || socket.readyState !== 1) {
@@ -78,7 +82,18 @@ export function createBrowserRelayClient(args: {
       relayUrl.searchParams.set("deviceId", args.deviceId);
       relayUrl.searchParams.set("role", "browser");
 
+      manualClose = false;
       socket = new WebSocketConstructor(relayUrl.toString());
+      socket.addEventListener("close", () => {
+        const wasManualClose = manualClose;
+        socket = null;
+        if (!wasManualClose) {
+          args.onTransportStateChange?.("disconnected");
+        }
+      });
+      socket.addEventListener("error", () => {
+        args.onTransportStateChange?.("error");
+      });
       socket.addEventListener("message", (event) => {
         const raw = JSON.parse(String((event as BrowserWebSocketMessageEvent).data)) as unknown;
         if (
@@ -95,7 +110,14 @@ export function createBrowserRelayClient(args: {
       });
 
       await new Promise<void>((resolve, reject) => {
-        socket?.addEventListener("open", () => resolve(), { once: true });
+        socket?.addEventListener(
+          "open",
+          () => {
+            args.onTransportStateChange?.("connected");
+            resolve();
+          },
+          { once: true },
+        );
         socket?.addEventListener(
           "error",
           () => reject(new Error("browser failed to connect to relay")),
@@ -164,6 +186,7 @@ export function createBrowserRelayClient(args: {
       });
     },
     async disconnect() {
+      manualClose = true;
       socket?.close(1000, "browser shutdown");
       socket = null;
     },
