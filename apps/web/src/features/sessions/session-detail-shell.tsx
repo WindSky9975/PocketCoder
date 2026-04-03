@@ -22,6 +22,11 @@ import {
   type BrowserRelayClient,
   type RelayInboundMessage,
 } from "../../lib/realtime/relay-client.ts";
+import {
+  readApprovalRequestedPayload,
+  readSessionOutputDeltaPayload,
+  readSessionSummaryPayload,
+} from "../../lib/realtime/session-message-crypto.ts";
 import { loadStoredPairedDevice, type StoredPairedDevice } from "../../lib/storage/device-store.ts";
 
 function statusChipClass(status: SessionStatus | "disconnected"): string {
@@ -45,6 +50,11 @@ function appendOutputLine(current: string[], nextLine: string): string[] {
   return next.slice(Math.max(0, next.length - 60));
 }
 
+type ApprovalRequestView = ApprovalRequestedPayload & {
+  approvalId: string;
+  prompt: string;
+};
+
 export function SessionDetailShell({ sessionId }: { sessionId: string }) {
   const { locale, messages } = useLocale();
   const [pairedDevice, setPairedDevice] = useState<StoredPairedDevice | null>(null);
@@ -54,7 +64,7 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
   const [currentTask, setCurrentTask] = useState<string | null>(null);
   const [lastActivityAt, setLastActivityAt] = useState<string | null>(null);
   const [outputLines, setOutputLines] = useState<string[]>([]);
-  const [approvalRequests, setApprovalRequests] = useState<ApprovalRequestedPayload[]>([]);
+  const [approvalRequests, setApprovalRequests] = useState<ApprovalRequestView[]>([]);
   const [prompt, setPrompt] = useState("");
   const [isSending, setIsSending] = useState(false);
   const clientRef = useRef<BrowserRelayClient | null>(null);
@@ -88,6 +98,7 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
     if (!pairedDevice) {
       return;
     }
+    const activePairedDevice = pairedDevice;
 
     let closed = false;
 
@@ -147,7 +158,7 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
       }, delayMs);
     }
 
-    function handleInboundMessage(message: RelayInboundMessage) {
+    async function handleInboundMessage(message: RelayInboundMessage) {
       if (message.type === "connected") {
         setConnectionState("connected");
         setTransportError(null);
@@ -160,23 +171,35 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
             return;
           }
 
-          setSessionStatus(message.payload.status);
-          setCurrentTask(
-            message.payload.currentTask ?? messagesRef.current.sessionDetail.currentTaskConnected,
-          );
-          setLastActivityAt(message.payload.lastActivityAt);
+          {
+            const summary = await readSessionSummaryPayload({
+              message,
+              pairedDevice: activePairedDevice,
+            });
+            setSessionStatus(summary.status);
+            setCurrentTask(
+              summary.currentTask ?? messagesRef.current.sessionDetail.currentTaskConnected,
+            );
+            setLastActivityAt(summary.lastActivityAt);
+          }
           break;
         case "SessionOutputDelta":
           if (message.payload.sessionId !== sessionId) {
             return;
           }
 
-          setOutputLines((current) =>
-            appendOutputLine(
-              current,
-              `[${getStreamLabel(messagesRef.current, message.payload.stream)}] ${message.payload.delta}`,
-            ),
-          );
+          {
+            const output = await readSessionOutputDeltaPayload({
+              message,
+              pairedDevice: activePairedDevice,
+            });
+            setOutputLines((current) =>
+              appendOutputLine(
+                current,
+                `[${getStreamLabel(messagesRef.current, output.stream)}] ${output.delta ?? ""}`,
+              ),
+            );
+          }
           break;
         case "SessionStateChanged":
         {
@@ -202,13 +225,23 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
             return;
           }
 
-          setApprovalRequests((current) => {
-            if (current.some((request) => request.approvalId === message.payload.approvalId)) {
-              return current;
-            }
+          {
+            const approval = await readApprovalRequestedPayload({
+              message,
+              pairedDevice: activePairedDevice,
+            });
+            setApprovalRequests((current) => {
+              if (
+                !approval.approvalId ||
+                !approval.prompt ||
+                current.some((request) => request.approvalId === approval.approvalId)
+              ) {
+                return current;
+              }
 
-            return [...current, message.payload];
-          });
+              return [...current, approval as ApprovalRequestView];
+            });
+          }
           setSessionStatus("waiting_approval");
           break;
         case "Ack":
@@ -224,11 +257,13 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
     }
 
     const relayClient = createBrowserRelayClient({
-      relayUrl: resolveRelayWebSocketUrl(pairedDevice.relayOrigin),
-      deviceId: pairedDevice.deviceId,
+      relayUrl: resolveRelayWebSocketUrl(activePairedDevice.relayOrigin),
+      pairedDevice: activePairedDevice,
       onMessage(message) {
         if (!closed) {
-          handleInboundMessage(message);
+          void handleInboundMessage(message).catch((error: unknown) => {
+            setTransportError(error instanceof Error ? error.message : "failed to decrypt relay event");
+          });
         }
       },
       onTransportStateChange(state) {
@@ -416,10 +451,10 @@ export function SessionDetailShell({ sessionId }: { sessionId: string }) {
         <div className="terminal-output" aria-label={messages.sessionDetail.outputAriaLabel}>
           {(outputLines.length === 0 ? [messages.sessionDetail.outputWaiting] : outputLines).map(
             (line, index) => (
-            <p key={`${line}-${index}`} className="terminal-line">
-              {line}
-            </p>
-          ),
+              <p key={`${line}-${index}`} className="terminal-line">
+                {line}
+              </p>
+            ),
           )}
         </div>
       </section>

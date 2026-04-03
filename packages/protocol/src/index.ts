@@ -4,6 +4,7 @@ export * from "./constants/session-status.ts";
 export * from "./schemas/envelope.ts";
 export * from "./schemas/protocol.ts";
 export * from "./schemas/pairing.ts";
+export * from "./schemas/encryption.ts";
 export * from "./schemas/session.ts";
 export * from "./schemas/command.ts";
 export * from "./schemas/error.ts";

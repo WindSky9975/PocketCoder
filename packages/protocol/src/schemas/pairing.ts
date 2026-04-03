@@ -2,6 +2,8 @@ import { z } from "zod";
 
 import { createEnvelopeSchema } from "./envelope.ts";
 
+export const deviceRoleSchema = z.enum(["desktop", "browser"]);
+
 export const pairingInitPayloadSchema = z.object({
   pairingToken: z.string().min(1),
   deviceName: z.string().min(1),
@@ -17,7 +19,11 @@ export const pairingConfirmPayloadSchema = z.object({
 export const deviceRegisteredPayloadSchema = z.object({
   deviceId: z.string().min(1),
   deviceName: z.string().min(1),
-  registeredAt: z.string().datetime({ offset: true })
+  registeredAt: z.string().datetime({ offset: true }),
+  role: deviceRoleSchema.optional(),
+  publicKey: z.string().min(1).optional(),
+  pairedDesktopDeviceId: z.string().min(1).optional(),
+  grantedScopes: z.array(z.string().min(1)).optional(),
 });
 
 export const pairingInitEnvelopeSchema = createEnvelopeSchema(

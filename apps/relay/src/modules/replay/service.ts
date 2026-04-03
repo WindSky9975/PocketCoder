@@ -4,7 +4,7 @@ import type { ReplayEventRepository } from "../../storage/repositories/replay-ev
 
 export interface ReplayService {
   record(envelope: ProtocolEventEnvelope): void;
-  listRecent(sessionId: string, nowIso?: string): ProtocolEventEnvelope[];
+  listRecent(sessionId: string, recipientDeviceId: string, nowIso?: string): ProtocolEventEnvelope[];
 }
 
 export function createReplayService(
@@ -13,23 +13,32 @@ export function createReplayService(
 ): ReplayService {
   return {
     record(envelope) {
-      const payload = envelope.payload as { sessionId?: unknown };
+      const payload = envelope.payload as {
+        sessionId?: unknown;
+        encrypted?: {
+          recipientDeviceId?: unknown;
+        };
+      };
       const sessionId = payload.sessionId;
       if (typeof sessionId !== "string" || sessionId.length === 0) {
+        return;
+      }
+      if (typeof payload.encrypted?.recipientDeviceId !== "string") {
         return;
       }
 
       repository.append({
         sessionId,
+        recipientDeviceId: payload.encrypted.recipientDeviceId,
         messageId: envelope.messageId,
         ciphertextBlob: JSON.stringify(envelope),
         recordedAt: envelope.timestamp,
       });
     },
-    listRecent(sessionId, nowIso = new Date().toISOString()) {
+    listRecent(sessionId, recipientDeviceId, nowIso = new Date().toISOString()) {
       const sinceIso = new Date(Date.parse(nowIso) - replayWindowMs).toISOString();
       return repository
-        .listBySessionSince(sessionId, sinceIso)
+        .listBySessionRecipientSince(sessionId, recipientDeviceId, sinceIso)
         .map((record) => JSON.parse(record.ciphertextBlob) as ProtocolEventEnvelope);
     },
   };

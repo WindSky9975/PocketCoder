@@ -1,6 +1,8 @@
 import { PROTOCOL_VERSION, createMessageId, parseProtocolEnvelope } from "@pocketcoder/protocol";
 
 import { createBrowserDeviceProof } from "../crypto/device-proof.ts";
+import { encryptBrowserPayload } from "../crypto/session-crypto.ts";
+import type { StoredPairedDevice } from "../storage/device-store.ts";
 
 interface BrowserWebSocketMessageEvent {
   data: unknown;
@@ -49,7 +51,7 @@ export function resolveRelayWebSocketUrl(relayOrigin: string): string {
 
 export function createBrowserRelayClient(args: {
   relayUrl: string;
-  deviceId: string;
+  pairedDevice: StoredPairedDevice;
   createDeviceProof?: (deviceId: string) => Promise<{ timestamp: string; signature: string }>;
   onMessage?: (message: RelayInboundMessage) => void;
   onTransportStateChange?: (state: RelayTransportState) => void;
@@ -85,9 +87,9 @@ export function createBrowserRelayClient(args: {
         args.createDeviceProof ??
         (async (deviceId: string) => createBrowserDeviceProof({ deviceId }));
       const relayUrl = new URL(args.relayUrl);
-      relayUrl.searchParams.set("deviceId", args.deviceId);
+      relayUrl.searchParams.set("deviceId", args.pairedDevice.deviceId);
       relayUrl.searchParams.set("role", "browser");
-      const deviceProof = await createDeviceProof(args.deviceId);
+      const deviceProof = await createDeviceProof(args.pairedDevice.deviceId);
       relayUrl.searchParams.set("proof", deviceProof.signature);
       relayUrl.searchParams.set("proofTimestamp", deviceProof.timestamp);
 
@@ -146,51 +148,95 @@ export function createBrowserRelayClient(args: {
       });
     },
     async sendPrompt(sessionId, prompt) {
+      const messageId = createMessageId("cmd");
       await sendEnvelope({
         protocolVersion: PROTOCOL_VERSION,
-        messageId: createMessageId("cmd"),
+        messageId,
         timestamp: new Date().toISOString(),
         type: "SendPrompt",
         payload: {
           sessionId,
-          prompt,
+          encrypted: await encryptBrowserPayload({
+            senderDeviceId: args.pairedDevice.deviceId,
+            recipientDeviceId: args.pairedDevice.desktopDeviceId,
+            recipientPublicKey: args.pairedDevice.desktopPublicKey,
+            type: "SendPrompt",
+            messageId,
+            sessionId,
+            plaintext: {
+              prompt,
+            },
+          }),
         },
       });
     },
     async respondToApproval(sessionId, approvalId, decision) {
+      const messageId = createMessageId("cmd");
       await sendEnvelope({
         protocolVersion: PROTOCOL_VERSION,
-        messageId: createMessageId("cmd"),
+        messageId,
         timestamp: new Date().toISOString(),
         type: "ApprovalResponse",
         payload: {
           sessionId,
-          approvalId,
-          decision,
+          encrypted: await encryptBrowserPayload({
+            senderDeviceId: args.pairedDevice.deviceId,
+            recipientDeviceId: args.pairedDevice.desktopDeviceId,
+            recipientPublicKey: args.pairedDevice.desktopPublicKey,
+            type: "ApprovalResponse",
+            messageId,
+            sessionId,
+            plaintext: {
+              approvalId,
+              decision,
+            },
+          }),
         },
       });
     },
     async interruptSession(sessionId, reason) {
+      const messageId = createMessageId("cmd");
       await sendEnvelope({
         protocolVersion: PROTOCOL_VERSION,
-        messageId: createMessageId("cmd"),
+        messageId,
         timestamp: new Date().toISOString(),
         type: "InterruptSession",
         payload: {
           sessionId,
-          reason,
+          encrypted: await encryptBrowserPayload({
+            senderDeviceId: args.pairedDevice.deviceId,
+            recipientDeviceId: args.pairedDevice.desktopDeviceId,
+            recipientPublicKey: args.pairedDevice.desktopPublicKey,
+            type: "InterruptSession",
+            messageId,
+            sessionId,
+            plaintext: {
+              reason,
+            },
+          }),
         },
       });
     },
     async resumeDesktopControl(sessionId) {
+      const messageId = createMessageId("cmd");
       await sendEnvelope({
         protocolVersion: PROTOCOL_VERSION,
-        messageId: createMessageId("cmd"),
+        messageId,
         timestamp: new Date().toISOString(),
         type: "ResumeDesktopControl",
         payload: {
           sessionId,
-          requestedBy: args.deviceId,
+          encrypted: await encryptBrowserPayload({
+            senderDeviceId: args.pairedDevice.deviceId,
+            recipientDeviceId: args.pairedDevice.desktopDeviceId,
+            recipientPublicKey: args.pairedDevice.desktopPublicKey,
+            type: "ResumeDesktopControl",
+            messageId,
+            sessionId,
+            plaintext: {
+              requestedBy: args.pairedDevice.deviceId,
+            },
+          }),
         },
       });
     },

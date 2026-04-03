@@ -256,7 +256,7 @@ describe("relay security and dedupe", () => {
 
     assert.equal(directory.sessions.length, 1);
     assert.equal(directory.sessions[0]?.sessionId, "session-1");
-    assert.equal(directory.sessions[0]?.currentTask, "inspect relay health");
+    assert.equal(directory.sessions[0]?.currentTask, undefined);
   });
 
   it("returns the latest session summary on subscribe even when replay history is empty", () => {

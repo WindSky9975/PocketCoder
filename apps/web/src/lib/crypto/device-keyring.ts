@@ -12,7 +12,7 @@ export interface BrowserKeyStorageLike {
   setItem(key: string, value: string): void;
 }
 
-interface PersistedBrowserKeyRecord {
+export interface PersistedBrowserKeyRecord {
   deviceId: string;
   publicKey: string;
   privateKey: string;
@@ -128,7 +128,7 @@ export function createBrowserDeviceKeyRecord(deviceId: string): BrowserDeviceKey
   };
 }
 
-function parsePersistedBrowserKeyRecord(raw: string): PersistedBrowserKeyRecord | null {
+export function parsePersistedBrowserKeyRecord(raw: string): PersistedBrowserKeyRecord | null {
   const parsed = JSON.parse(raw) as Partial<PersistedBrowserKeyRecord>;
   if (
     typeof parsed.deviceId !== "string" ||
@@ -143,6 +143,27 @@ function parsePersistedBrowserKeyRecord(raw: string): PersistedBrowserKeyRecord 
     publicKey: parsed.publicKey,
     privateKey: parsed.privateKey,
   };
+}
+
+export function loadPersistedBrowserKeyRecord(args: {
+  storage?: BrowserKeyStorageLike;
+} = {}): PersistedBrowserKeyRecord {
+  const storage = resolveBrowserStorage(args.storage);
+  if (!storage) {
+    throw new Error("browser secure storage is not available");
+  }
+
+  const raw = storage.getItem(BROWSER_KEY_STORAGE_KEY);
+  if (!raw) {
+    throw new Error("browser device key is missing");
+  }
+
+  const persistedRecord = parsePersistedBrowserKeyRecord(raw);
+  if (!persistedRecord) {
+    throw new Error("browser device key is invalid");
+  }
+
+  return persistedRecord;
 }
 
 export async function loadOrCreateBrowserDeviceKeyRecord(args: {
@@ -188,24 +209,13 @@ export async function signBrowserPayload(args: {
   payload: string;
   storage?: BrowserKeyStorageLike;
 }): Promise<string> {
-  const storage = resolveBrowserStorage(args.storage);
-  if (!storage) {
-    throw new Error("browser secure storage is not available");
-  }
-
   if (!globalThis.crypto?.subtle) {
     throw new Error("Web Crypto is not available in this runtime");
   }
 
-  const raw = storage.getItem(BROWSER_KEY_STORAGE_KEY);
-  if (!raw) {
-    throw new Error("browser device key is missing");
-  }
-
-  const persistedRecord = parsePersistedBrowserKeyRecord(raw);
-  if (!persistedRecord) {
-    throw new Error("browser device key is invalid");
-  }
+  const persistedRecord = loadPersistedBrowserKeyRecord({
+    storage: args.storage,
+  });
 
   const privateKey = await globalThis.crypto.subtle.importKey(
     "pkcs8",

@@ -1,28 +1,33 @@
 import { z } from "zod";
 
 import { messageIdSchema, createEnvelopeSchema } from "./envelope.ts";
+import { encryptedPayloadSchema } from "./encryption.ts";
 
 export const approvalDecisionSchema = z.enum(["allow", "deny"]);
 
 export const approvalResponsePayloadSchema = z.object({
   sessionId: z.string().min(1),
-  approvalId: z.string().min(1),
-  decision: approvalDecisionSchema
+  approvalId: z.string().min(1).optional(),
+  decision: approvalDecisionSchema.optional(),
+  encrypted: encryptedPayloadSchema.optional(),
 });
 
 export const sendPromptPayloadSchema = z.object({
   sessionId: z.string().min(1),
-  prompt: z.string().min(1)
+  prompt: z.string().min(1).optional(),
+  encrypted: encryptedPayloadSchema.optional(),
 });
 
 export const interruptSessionPayloadSchema = z.object({
   sessionId: z.string().min(1),
-  reason: z.string().optional()
+  reason: z.string().optional(),
+  encrypted: encryptedPayloadSchema.optional(),
 });
 
 export const resumeDesktopControlPayloadSchema = z.object({
   sessionId: z.string().min(1),
-  requestedBy: z.string().min(1).optional()
+  requestedBy: z.string().min(1).optional(),
+  encrypted: encryptedPayloadSchema.optional(),
 });
 
 export const ackPayloadSchema = z.object({

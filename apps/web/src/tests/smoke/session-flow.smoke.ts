@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { generateKeyPairSync } from "node:crypto";
 import { afterEach, describe, it } from "node:test";
 
 import { PROTOCOL_VERSION } from "@pocketcoder/protocol";
@@ -7,6 +8,10 @@ import {
   createBrowserRelayClient,
   resolveRelayWebSocketUrl,
 } from "../../lib/realtime/relay-client.ts";
+import {
+  loadOrCreateBrowserDeviceKeyRecord,
+  type BrowserKeyStorageLike,
+} from "../../lib/crypto/device-keyring.ts";
 
 type MockListener = (event: { data?: string }) => void;
 
@@ -56,10 +61,33 @@ class MockWebSocket {
 }
 
 const originalWebSocket = globalThis.WebSocket;
+const originalLocalStorage = "localStorage" in globalThis ? globalThis.localStorage : undefined;
+
+function createMemoryStorage(): BrowserKeyStorageLike & { removeItem(key: string): void } {
+  const store = new Map<string, string>();
+
+  return {
+    getItem(key) {
+      return store.get(key) ?? null;
+    },
+    setItem(key, value) {
+      store.set(key, value);
+    },
+    removeItem(key) {
+      store.delete(key);
+    },
+  };
+}
 
 afterEach(() => {
   MockWebSocket.instances = [];
   globalThis.WebSocket = originalWebSocket;
+  if (originalLocalStorage) {
+    globalThis.localStorage = originalLocalStorage;
+    return;
+  }
+
+  Reflect.deleteProperty(globalThis, "localStorage");
 });
 
 describe("pair to session-detail prompt main flow", () => {
@@ -67,10 +95,35 @@ describe("pair to session-detail prompt main flow", () => {
     const inboundTypes: string[] = [];
     const transportStates: string[] = [];
     globalThis.WebSocket = MockWebSocket as unknown as typeof WebSocket;
+    const storage = createMemoryStorage();
+    (globalThis as typeof globalThis & { localStorage: Storage }).localStorage =
+      storage as unknown as Storage;
+    await loadOrCreateBrowserDeviceKeyRecord({
+      deviceId: "browser-1",
+      storage,
+    });
+    const desktopIdentity = generateKeyPairSync("ec", {
+      namedCurve: "prime256v1",
+      privateKeyEncoding: {
+        format: "pem",
+        type: "pkcs8",
+      },
+      publicKeyEncoding: {
+        format: "pem",
+        type: "spki",
+      },
+    });
 
     const client = createBrowserRelayClient({
       relayUrl: resolveRelayWebSocketUrl("https://relay.example"),
-      deviceId: "browser-1",
+      pairedDevice: {
+        deviceId: "browser-1",
+        desktopDeviceId: "desktop-1",
+        desktopPublicKey: desktopIdentity.publicKey,
+        pairedAt: "2026-04-03T10:00:00.000Z",
+        relayOrigin: "https://relay.example",
+        accessScope: ["session:read", "session:write"],
+      },
       createDeviceProof: async () => ({
         timestamp: "2026-04-03T10:00:00.000Z",
         signature: "browser-proof",
@@ -147,11 +200,7 @@ describe("pair to session-detail prompt main flow", () => {
     assert.ok(secondSocket);
     assert.equal(
       secondSocket?.url,
-<<<<<<< HEAD
       "wss://relay.example/ws?deviceId=browser-1&role=browser&proof=browser-proof&proofTimestamp=2026-04-03T10%3A00%3A00.000Z",
-=======
-      "wss://relay.example/ws?deviceId=browser-1&role=browser",
->>>>>>> 03c915497dd08ded000ed763332ec3d8bd62e20e
     );
     assert.deepEqual(transportStates, ["connected", "disconnected", "connected"]);
   });

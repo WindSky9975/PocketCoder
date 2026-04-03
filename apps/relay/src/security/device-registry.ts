@@ -30,6 +30,7 @@ export interface DeviceRegistry {
   }): RegisteredDevice;
   getRegisteredDevice(deviceId: string): RegisteredDevice | null;
   getGrant(deviceId: string): DeviceGrant | null;
+  listPairedBrowserDevices(desktopDeviceId: string): RegisteredDevice[];
 }
 
 export function createRegisteredDevice(args: {
@@ -129,6 +130,14 @@ export function createDeviceRegistry(repository: DeviceRecordRepository): Device
         scopes: device.scopes,
         revokedAt: device.revokedAt,
       };
+    },
+    listPairedBrowserDevices(desktopDeviceId) {
+      return repository
+        .list()
+        .filter(
+          (device) =>
+            device.role === "browser" && device.pairedDesktopDeviceId === desktopDeviceId,
+        );
     },
   };
 }

@@ -93,6 +93,10 @@ export function createPairingModule(args: {
             deviceId: browserDevice.deviceId,
             deviceName: browserDevice.deviceName,
             registeredAt: browserDevice.pairedAt,
+            role: browserDevice.role,
+            publicKey: browserDevice.publicKey,
+            pairedDesktopDeviceId: browserDevice.pairedDesktopDeviceId ?? undefined,
+            grantedScopes: browserDevice.scopes,
           },
         }),
       };

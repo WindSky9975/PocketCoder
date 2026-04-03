@@ -195,6 +195,18 @@ describe("relay realtime integration", () => {
 
       await Promise.all([desktopSocket.waitForOpen(), browserSocket.waitForOpen()]);
       await Promise.all([desktopSocket.nextMessage(), browserSocket.nextMessage()]);
+      const browserRegisteredEvents = [
+        await desktopSocket.nextMessage(),
+        await desktopSocket.nextMessage(),
+      ];
+      assert.deepEqual(
+        browserRegisteredEvents.map((event) => event.type),
+        ["DeviceRegistered", "DeviceRegistered"],
+      );
+      assert.deepEqual(
+        browserRegisteredEvents.map((event) => (event.payload as { deviceId?: string }).deviceId),
+        [browserDeviceId, browserDeviceId],
+      );
 
       desktopSocket.socket.send(
         JSON.stringify({
@@ -206,7 +218,6 @@ describe("relay realtime integration", () => {
             sessionId: "session-1",
             provider: "codex",
             status: "running",
-            currentTask: "integration",
             lastActivityAt: createRecentIso(-4_000),
           },
         }),
@@ -220,7 +231,13 @@ describe("relay realtime integration", () => {
           payload: {
             sessionId: "session-1",
             stream: "stdout",
-            delta: "relay replay payload",
+            encrypted: {
+              senderDeviceId: "desktop-1",
+              recipientDeviceId: browserDeviceId,
+              algorithm: "p256-sha256-aes-256-gcm",
+              nonce: "relay-test-nonce",
+              ciphertext: "relay-test-ciphertext",
+            },
           },
         }),
       );
@@ -244,7 +261,7 @@ describe("relay realtime integration", () => {
       assert.equal(sessionDirectoryBody.sessions.length, 1);
       assert.equal(sessionDirectoryBody.sessions[0]?.sessionId, "session-1");
       assert.equal(sessionDirectoryBody.sessions[0]?.status, "running");
-      assert.equal(sessionDirectoryBody.sessions[0]?.currentTask, "integration");
+      assert.equal(sessionDirectoryBody.sessions[0]?.currentTask, undefined);
 
       browserSocket.socket.send(
         JSON.stringify({

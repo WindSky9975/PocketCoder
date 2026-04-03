@@ -27,6 +27,7 @@ export interface ConnectionRegistry {
   register(args: { deviceId: string; role: RelayDeviceRole; socket: RelaySocketLike }): ConnectionRecord;
   unregister(connectionId: string): void;
   touch(connectionId: string): void;
+  get(connectionId: string): ConnectionRecord | null;
   getLatestByDeviceId(deviceId: string): ConnectionRecord | null;
   subscribe(connectionId: string, sessionId: string): void;
   listSubscribers(sessionId: string): ConnectionRecord[];
@@ -61,6 +62,9 @@ export function createConnectionRegistry(): ConnectionRegistry {
       }
 
       connection.lastSeenAt = new Date().toISOString();
+    },
+    get(connectionId) {
+      return connections.get(connectionId) ?? null;
     },
     getLatestByDeviceId(deviceId) {
       const matches = [...connections.values()].filter((connection) => connection.deviceId === deviceId);

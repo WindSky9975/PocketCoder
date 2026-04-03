@@ -1,5 +1,6 @@
 export interface ReplayEventRecord {
   sessionId: string;
+  recipientDeviceId: string;
   messageId: string;
   ciphertextBlob: string;
   recordedAt: string;
@@ -7,7 +8,11 @@ export interface ReplayEventRecord {
 
 export interface ReplayEventRepository {
   append(record: ReplayEventRecord): ReplayEventRecord;
-  listBySessionSince(sessionId: string, sinceIso: string): ReplayEventRecord[];
+  listBySessionRecipientSince(
+    sessionId: string,
+    recipientDeviceId: string,
+    sinceIso: string,
+  ): ReplayEventRecord[];
   list(): ReplayEventRecord[];
 }
 
@@ -19,10 +24,14 @@ export function createReplayEventRepository(
       store.push(record);
       return record;
     },
-    listBySessionSince(sessionId, sinceIso) {
+    listBySessionRecipientSince(sessionId, recipientDeviceId, sinceIso) {
       const sinceMs = Date.parse(sinceIso);
       return store.filter((record) => {
-        return record.sessionId === sessionId && Date.parse(record.recordedAt) >= sinceMs;
+        return (
+          record.sessionId === sessionId &&
+          record.recipientDeviceId === recipientDeviceId &&
+          Date.parse(record.recordedAt) >= sinceMs
+        );
       });
     },
     list() {

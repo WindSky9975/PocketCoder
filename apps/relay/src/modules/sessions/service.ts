@@ -66,6 +66,21 @@ function readSessionId(payload: unknown): string {
   return sessionId;
 }
 
+function readRecipientDeviceId(payload: unknown): string | null {
+  const encrypted =
+    typeof payload === "object" && payload !== null && "encrypted" in payload
+      ? (payload as { encrypted?: unknown }).encrypted
+      : undefined;
+  const recipientDeviceId =
+    typeof encrypted === "object" && encrypted !== null && "recipientDeviceId" in encrypted
+      ? (encrypted as { recipientDeviceId?: unknown }).recipientDeviceId
+      : undefined;
+
+  return typeof recipientDeviceId === "string" && recipientDeviceId.length > 0
+    ? recipientDeviceId
+    : null;
+}
+
 export function createSessionRelayService(args: {
   routes: SessionRouteRepository;
   commandDedupe: CommandDedupeRepository;
@@ -76,6 +91,7 @@ export function createSessionRelayService(args: {
     handleRealtimeEvent(sourceConnectionId, sourceDeviceId, envelope) {
       const sessionId = readSessionId(envelope.payload);
       const currentRoute = args.routes.get(sessionId);
+      const recipientDeviceId = readRecipientDeviceId(envelope.payload);
       args.routes.save(
         buildSessionRouteRecord({
           currentRoute,
@@ -84,10 +100,15 @@ export function createSessionRelayService(args: {
         }),
       );
 
-      args.replay.record(envelope);
+      if (recipientDeviceId) {
+        args.replay.record(envelope);
+      }
 
       for (const subscriber of args.connections.listSubscribers(sessionId)) {
         if (subscriber.connectionId === sourceConnectionId) {
+          continue;
+        }
+        if (recipientDeviceId && subscriber.deviceId !== recipientDeviceId) {
           continue;
         }
 
@@ -117,10 +138,9 @@ export function createSessionRelayService(args: {
 
       const sessionId = readSessionId(envelope.payload);
       args.connections.subscribe(connectionId, sessionId);
+      const connection = args.connections.get(connectionId);
       const sessionSnapshot = toSessionSummaryPayload(args.routes.get(sessionId));
-      const replay = args.replay
-        .listRecent(sessionId)
-        .filter((replayEnvelope) => replayEnvelope.type !== "SessionSummary");
+      const replay = connection ? args.replay.listRecent(sessionId, connection.deviceId) : [];
 
       return {
         ack: createAckEnvelope(envelope.messageId, true, `subscribed to ${sessionId}`),
@@ -203,7 +223,6 @@ function buildSessionRouteRecord(args: {
     provider: currentRoute?.provider,
     status: currentRoute?.status,
     lastStateReason: currentRoute?.lastStateReason,
-    currentTask: currentRoute?.currentTask,
     lastActivityAt: currentRoute?.lastActivityAt,
     updatedAt: args.envelope.timestamp,
   };
@@ -217,7 +236,6 @@ function buildSessionRouteRecord(args: {
         args.envelope.payload.status === "disconnected"
           ? currentRoute?.lastStateReason
           : undefined,
-      currentTask: args.envelope.payload.currentTask,
       lastActivityAt: args.envelope.payload.lastActivityAt,
     };
   }
@@ -236,7 +254,6 @@ function buildSessionRouteRecord(args: {
       ...baseRecord,
       status: "waiting_approval",
       lastStateReason: undefined,
-      currentTask: args.envelope.payload.prompt,
       lastActivityAt: args.envelope.payload.issuedAt,
     };
   }
@@ -260,7 +277,6 @@ function toSessionSummaryPayload(route: SessionRouteRecord | null): SessionSumma
     sessionId: route.sessionId,
     provider: route.provider,
     status: route.status,
-    ...(route.currentTask ? { currentTask: route.currentTask } : {}),
     lastActivityAt: route.lastActivityAt,
   };
 }

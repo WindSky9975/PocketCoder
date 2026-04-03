@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { SESSION_STATUS_VALUES } from "../constants/session-status.ts";
 import { createEnvelopeSchema } from "./envelope.ts";
+import { encryptedPayloadSchema } from "./encryption.ts";
 
 export const sessionStatusSchema = z.enum(SESSION_STATUS_VALUES);
 
@@ -10,7 +11,8 @@ export const sessionSummaryPayloadSchema = z.object({
   provider: z.string().min(1),
   status: sessionStatusSchema,
   currentTask: z.string().min(1).optional(),
-  lastActivityAt: z.string().datetime({ offset: true })
+  lastActivityAt: z.string().datetime({ offset: true }),
+  encrypted: encryptedPayloadSchema.optional(),
 });
 
 export const sessionSubscribePayloadSchema = z.object({
@@ -20,20 +22,22 @@ export const sessionSubscribePayloadSchema = z.object({
 export const sessionOutputDeltaPayloadSchema = z.object({
   sessionId: z.string().min(1),
   stream: z.enum(["stdout", "stderr"]),
-  delta: z.string()
+  delta: z.string().optional(),
+  encrypted: encryptedPayloadSchema.optional(),
 });
 
 export const sessionStateChangedPayloadSchema = z.object({
   sessionId: z.string().min(1),
   status: sessionStatusSchema,
-  reason: z.string().optional()
+  reason: z.string().optional(),
 });
 
 export const approvalRequestedPayloadSchema = z.object({
   sessionId: z.string().min(1),
-  approvalId: z.string().min(1),
-  prompt: z.string().min(1),
-  issuedAt: z.string().datetime({ offset: true })
+  approvalId: z.string().min(1).optional(),
+  prompt: z.string().min(1).optional(),
+  issuedAt: z.string().datetime({ offset: true }),
+  encrypted: encryptedPayloadSchema.optional(),
 });
 
 export const sessionDirectoryResponseSchema = z.object({

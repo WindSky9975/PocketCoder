@@ -91,6 +91,17 @@ function readPersistedDeviceKeyRecord(filePath: string): PersistedDeviceKeyRecor
   };
 }
 
+export function loadPersistedDeviceKeyRecord(args: {
+  runtimeRoot: string;
+}): PersistedDeviceKeyRecord {
+  const record = readPersistedDeviceKeyRecord(resolveDeviceKeyPath(args.runtimeRoot));
+  if (!record) {
+    throw new Error("device key record is missing");
+  }
+
+  return record;
+}
+
 function writePersistedDeviceKeyRecord(filePath: string, record: PersistedDeviceKeyRecord): void {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, JSON.stringify(record, null, 2), "utf8");
@@ -115,11 +126,9 @@ export function signPayloadWithDeviceKey(args: {
   runtimeRoot: string;
   payload: string;
 }): string {
-  const filePath = resolveDeviceKeyPath(args.runtimeRoot);
-  const record = readPersistedDeviceKeyRecord(filePath);
-  if (!record) {
-    throw new Error("device key record is missing");
-  }
+  const record = loadPersistedDeviceKeyRecord({
+    runtimeRoot: args.runtimeRoot,
+  });
 
   const privateKey = createPrivateKey(record.privateKey);
   return sign("sha256", Buffer.from(args.payload, "utf8"), privateKey).toString("base64url");

@@ -1,6 +1,9 @@
 import {
+  PROTOCOL_VERSION,
   COMMAND_MESSAGE_TYPE_VALUES,
   EVENT_MESSAGE_TYPE_VALUES,
+  createMessageId,
+  deviceRegisteredEnvelopeSchema,
   parseProtocolEnvelope,
   type ProtocolCommandEnvelope,
   type ProtocolEnvelope,
@@ -27,6 +30,31 @@ function normalizeDeviceRole(value: string | undefined): RelayDeviceRole {
 
 function sendJson(socket: { send(data: string): void }, payload: unknown): void {
   socket.send(JSON.stringify(payload));
+}
+
+function createDeviceRegisteredEnvelope(args: {
+  deviceId: string;
+  deviceName: string;
+  registeredAt: string;
+  publicKey: string;
+  pairedDesktopDeviceId: string | null;
+  grantedScopes: string[];
+}): Extract<ProtocolEventEnvelope, { type: "DeviceRegistered" }> {
+  return deviceRegisteredEnvelopeSchema.parse({
+    protocolVersion: PROTOCOL_VERSION,
+    messageId: createMessageId("evt"),
+    timestamp: args.registeredAt,
+    type: "DeviceRegistered",
+    payload: {
+      deviceId: args.deviceId,
+      deviceName: args.deviceName,
+      registeredAt: args.registeredAt,
+      role: "browser",
+      publicKey: args.publicKey,
+      pairedDesktopDeviceId: args.pairedDesktopDeviceId ?? undefined,
+      grantedScopes: args.grantedScopes,
+    },
+  });
 }
 
 function isCommandEnvelope(envelope: ProtocolEnvelope): envelope is ProtocolCommandEnvelope {
@@ -139,6 +167,43 @@ export async function registerWsRoutes(
       deviceId: activeConnection.deviceId,
       role: activeConnection.role,
     });
+
+    if (activeConnection.role === "desktop") {
+      for (const browserDevice of deps.deviceRegistry.listPairedBrowserDevices(activeConnection.deviceId)) {
+        sendJson(
+          socket,
+          createDeviceRegisteredEnvelope({
+            deviceId: browserDevice.deviceId,
+            deviceName: browserDevice.deviceName,
+            registeredAt: browserDevice.pairedAt,
+            publicKey: browserDevice.publicKey,
+            pairedDesktopDeviceId: browserDevice.pairedDesktopDeviceId,
+            grantedScopes: browserDevice.scopes,
+          }),
+        );
+      }
+    }
+
+    if (activeConnection.role === "browser" && registeredDevice?.pairedDesktopDeviceId) {
+      const desktopConnection = deps.connections.getLatestByDeviceId(
+        registeredDevice.pairedDesktopDeviceId,
+      );
+      if (desktopConnection) {
+        deps.connections.send(
+          desktopConnection.connectionId,
+          JSON.stringify(
+            createDeviceRegisteredEnvelope({
+              deviceId: registeredDevice.deviceId,
+              deviceName: registeredDevice.deviceName,
+              registeredAt: registeredDevice.pairedAt,
+              publicKey: registeredDevice.publicKey,
+              pairedDesktopDeviceId: registeredDevice.pairedDesktopDeviceId,
+              grantedScopes: registeredDevice.scopes,
+            }),
+          ),
+        );
+      }
+    }
 
     socket.on("message", (chunk: Buffer) => {
       deps.connections.touch(activeConnection.connectionId);

@@ -4,6 +4,7 @@ import { createDesktopControlRegistry } from "./platform/windows/control-registr
 import { createInputDetector } from "./platform/windows/input-detector.js";
 import { loadOrCreateDeviceKeyRecord } from "./security/device-keys.js";
 import { createDesktopDeviceProofSigner } from "./security/device-proof.js";
+import { createPairedBrowserRegistry } from "./security/paired-browser-registry.js";
 import { createSessionManager } from "./sessions/session-manager.js";
 import { createSessionRegistry } from "./sessions/session-registry.js";
 import { createCommandHandler } from "./transport/command-handler.js";
@@ -27,6 +28,7 @@ export function createAgentdRuntime(): AgentdRuntime {
   });
   const sessionRegistry = createSessionRegistry();
   const sessionManager = createSessionManager(sessionRegistry);
+  const pairedBrowsers = createPairedBrowserRegistry();
   const codexPty = createCodexPtyProcess(config.codexCommand);
   let eventPublisher: ReturnType<typeof createEventPublisher> | null = null;
   const inputDetector = createInputDetector({
@@ -48,7 +50,13 @@ export function createAgentdRuntime(): AgentdRuntime {
       });
     },
   });
-  const commandHandler = createCommandHandler(sessionManager, codexPty, desktopControl);
+  const commandHandler = createCommandHandler(
+    sessionManager,
+    codexPty,
+    paths.runtimeRoot,
+    pairedBrowsers,
+    desktopControl,
+  );
   const relayClient = createRelayClient({
     relayUrl: config.relayUrl,
     deviceId: deviceKey.deviceId,
@@ -68,9 +76,41 @@ export function createAgentdRuntime(): AgentdRuntime {
           );
         }
       }
-    }
+    },
+    onEvent: async (event) => {
+      if (
+        event.type !== "DeviceRegistered" ||
+        event.payload.role !== "browser" ||
+        typeof event.payload.publicKey !== "string" ||
+        event.payload.pairedDesktopDeviceId !== deviceKey.deviceId
+      ) {
+        return;
+      }
+
+      pairedBrowsers.upsert({
+        deviceId: event.payload.deviceId,
+        deviceName: event.payload.deviceName,
+        publicKey: event.payload.publicKey,
+        pairedDesktopDeviceId: event.payload.pairedDesktopDeviceId,
+        grantedScopes: event.payload.grantedScopes ?? [],
+        registeredAt: event.payload.registeredAt,
+      });
+
+      if (!eventPublisher) {
+        return;
+      }
+
+      for (const session of sessionManager.listSessions()) {
+        await eventPublisher.publishSessionSummary(session);
+      }
+    },
   });
-  eventPublisher = createEventPublisher(relayClient);
+  eventPublisher = createEventPublisher({
+    relayClient,
+    runtimeRoot: paths.runtimeRoot,
+    desktopDeviceId: deviceKey.deviceId,
+    pairedBrowsers,
+  });
   const sessionAdapter = createCodexSessionAdapter(sessionManager, eventPublisher);
 
   async function publishDesktopControlRecovery(sessionId: string, reason: string): Promise<void> {

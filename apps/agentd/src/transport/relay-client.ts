@@ -1,5 +1,6 @@
 import {
   COMMAND_MESSAGE_TYPE_VALUES,
+  EVENT_MESSAGE_TYPE_VALUES,
   parseProtocolEnvelope,
   type ProtocolCommandEnvelope,
   type ProtocolEventEnvelope,
@@ -36,6 +37,7 @@ export function createRelayClient(args: {
   publicKey: string;
   createDeviceProof?: () => Promise<{ timestamp: string; signature: string }>;
   onCommand: (command: ProtocolCommandEnvelope) => Promise<void>;
+  onEvent?: (event: ProtocolEventEnvelope) => Promise<void>;
 }): RelayClient {
   const WebSocketConstructor = globalThis.WebSocket as unknown as RelayWebSocketConstructor | undefined;
   let socket: RelayWebSocket | null = null;
@@ -84,6 +86,11 @@ export function createRelayClient(args: {
           const envelope = parseProtocolEnvelope(message);
           if ((COMMAND_MESSAGE_TYPE_VALUES as readonly string[]).includes(envelope.type)) {
             await args.onCommand(envelope as ProtocolCommandEnvelope);
+            return;
+          }
+
+          if ((EVENT_MESSAGE_TYPE_VALUES as readonly string[]).includes(envelope.type)) {
+            await args.onEvent?.(envelope as ProtocolEventEnvelope);
           }
         } catch {
           return;
