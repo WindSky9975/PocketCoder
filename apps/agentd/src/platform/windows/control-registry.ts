@@ -15,32 +15,64 @@ export function createDesktopControlRegistry(args: {
   onRecovered?: (event: DesktopControlRecoveryEvent) => void;
 } = {}): DesktopControlRegistry {
   const boundaries = new Map<string, ReturnType<typeof createDesktopControlBoundary>>();
+  const detector = args.detector;
+
+  const createBoundary = (sessionId: string) => {
+    const boundary = createDesktopControlBoundary(sessionId);
+    boundaries.set(sessionId, boundary);
+    return boundary;
+  };
 
   const ensureBoundary = (sessionId: string) => {
     let boundary = boundaries.get(sessionId);
     if (!boundary) {
-      boundary = createDesktopControlBoundary(sessionId);
-      boundaries.set(sessionId, boundary);
+      boundary = createBoundary(sessionId);
+      detector?.watchSession(sessionId);
     }
 
     return boundary;
   };
 
-  args.detector?.subscribe((signal) => {
+  const activateSessionBoundary = (sessionId: string) => {
+    const existing = boundaries.get(sessionId);
+    if (!existing) {
+      const created = createBoundary(sessionId);
+      detector?.watchSession(sessionId);
+      return created;
+    }
+
+    if (existing.getSnapshot().status === "desktop-recovered") {
+      const reset = createBoundary(sessionId);
+      detector?.watchSession(sessionId);
+      return reset;
+    }
+
+    detector?.watchSession(sessionId);
+    return existing;
+  };
+
+  const publishRecovery = (event: DesktopControlRecoveryEvent | null) => {
+    if (!event) {
+      return null;
+    }
+
+    detector?.unwatchSession(event.sessionId);
+    args.onRecovered?.(event);
+    return event;
+  };
+
+  detector?.subscribe((signal) => {
     const boundary = boundaries.get(signal.sessionId);
     if (!boundary) {
       return;
     }
 
-    const event = boundary.handleLocalInput(signal);
-    if (event) {
-      args.onRecovered?.(event);
-    }
+    publishRecovery(boundary.handleLocalInput(signal));
   });
 
   return {
     ensureSession(sessionId) {
-      return ensureBoundary(sessionId).getSnapshot();
+      return activateSessionBoundary(sessionId).getSnapshot();
     },
     getSnapshot(sessionId) {
       return boundaries.get(sessionId)?.getSnapshot() ?? null;
@@ -49,20 +81,15 @@ export function createDesktopControlRegistry(args: {
       return ensureBoundary(sessionId).canAcceptRemoteCommands();
     },
     markRemoteControlReleased(sessionId) {
-      const event = ensureBoundary(sessionId).markRemoteControlReleased();
-      if (event) {
-        args.onRecovered?.(event);
-      }
-
-      return event;
+      return publishRecovery(ensureBoundary(sessionId).markRemoteControlReleased());
     },
     handleLocalInput(signal) {
-      const event = ensureBoundary(signal.sessionId).handleLocalInput(signal);
-      if (event) {
-        args.onRecovered?.(event);
+      const boundary = boundaries.get(signal.sessionId);
+      if (!boundary) {
+        return null;
       }
 
-      return event;
+      return publishRecovery(boundary.handleLocalInput(signal));
     },
   };
 }

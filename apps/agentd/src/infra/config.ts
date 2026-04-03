@@ -3,6 +3,7 @@ export interface AgentdConfig {
   relayUrl: string;
   relayConnectRetries: number;
   relayRetryDelayMs: number;
+  windowsInputPollIntervalMs: number;
 }
 
 export function readAgentdConfig(): AgentdConfig {
@@ -11,6 +12,10 @@ export function readAgentdConfig(): AgentdConfig {
     relayUrl: process.env.RELAY_URL ?? "ws://127.0.0.1:8787/ws",
     relayConnectRetries: readPositiveInteger(process.env.RELAY_CONNECT_RETRIES, 30),
     relayRetryDelayMs: readPositiveInteger(process.env.RELAY_RETRY_DELAY_MS, 1000),
+    windowsInputPollIntervalMs: readPositiveInteger(
+      process.env.WINDOWS_INPUT_POLL_INTERVAL_MS,
+      1000,
+    ),
   };
 }
 

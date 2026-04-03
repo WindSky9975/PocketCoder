@@ -28,7 +28,9 @@ export function createAgentdRuntime(): AgentdRuntime {
   const sessionManager = createSessionManager(sessionRegistry);
   const codexPty = createCodexPtyProcess(config.codexCommand);
   let eventPublisher: ReturnType<typeof createEventPublisher> | null = null;
-  const inputDetector = createInputDetector();
+  const inputDetector = createInputDetector({
+    pollIntervalMs: config.windowsInputPollIntervalMs,
+  });
   const desktopControl = createDesktopControlRegistry({
     detector: inputDetector,
     onRecovered(recovery) {
