@@ -1,5 +1,7 @@
 import { PROTOCOL_VERSION, createMessageId, parseProtocolEnvelope } from "@pocketcoder/protocol";
 
+import { createBrowserDeviceProof } from "../crypto/device-proof.ts";
+
 interface BrowserWebSocketMessageEvent {
   data: unknown;
 }
@@ -48,6 +50,7 @@ export function resolveRelayWebSocketUrl(relayOrigin: string): string {
 export function createBrowserRelayClient(args: {
   relayUrl: string;
   deviceId: string;
+  createDeviceProof?: (deviceId: string) => Promise<{ timestamp: string; signature: string }>;
   onMessage?: (message: RelayInboundMessage) => void;
   onTransportStateChange?: (state: RelayTransportState) => void;
 }): BrowserRelayClient {
@@ -78,9 +81,15 @@ export function createBrowserRelayClient(args: {
         return;
       }
 
+      const createDeviceProof =
+        args.createDeviceProof ??
+        (async (deviceId: string) => createBrowserDeviceProof({ deviceId }));
       const relayUrl = new URL(args.relayUrl);
       relayUrl.searchParams.set("deviceId", args.deviceId);
       relayUrl.searchParams.set("role", "browser");
+      const deviceProof = await createDeviceProof(args.deviceId);
+      relayUrl.searchParams.set("proof", deviceProof.signature);
+      relayUrl.searchParams.set("proofTimestamp", deviceProof.timestamp);
 
       manualClose = false;
       socket = new WebSocketConstructor(relayUrl.toString());

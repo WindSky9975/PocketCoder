@@ -8,9 +8,10 @@ import {
 } from "@pocketcoder/protocol";
 import type { FastifyInstance } from "fastify";
 
-import { isRelayProtocolError } from "../../infra/protocol-error.js";
+import { isRelayProtocolError, RelayProtocolError } from "../../infra/protocol-error.js";
 import type { SessionRelayService } from "../../modules/sessions/service.js";
 import { assertRelayConnectionAllowed } from "../../security/access-control.js";
+import { assertValidDeviceProof } from "../../security/device-proof.js";
 import type { DeviceRegistry } from "../../security/device-registry.js";
 import type { RelayDeviceRole } from "../../storage/repositories/device-record-repository.js";
 import { createErrorEnvelope } from "../protocol-messages.js";
@@ -45,19 +46,46 @@ export async function registerWsRoutes(
   },
 ): Promise<void> {
   app.get("/ws", { websocket: true }, async (socket, request) => {
-    const query = request.query as { deviceId?: string; role?: string; publicKey?: string };
+    const query = request.query as {
+      deviceId?: string;
+      role?: string;
+      publicKey?: string;
+      proof?: string;
+      proofTimestamp?: string;
+    };
     const deviceId = normalizeHeaderValue(request.headers["x-device-id"]) ?? query.deviceId;
     const role = normalizeDeviceRole(
       normalizeHeaderValue(request.headers["x-device-role"]) ?? query.role,
     );
     const publicKey =
       normalizeHeaderValue(request.headers["x-device-public-key"]) ?? query.publicKey;
+    const deviceProof = normalizeHeaderValue(request.headers["x-device-proof"]) ?? query.proof;
+    const deviceProofTimestamp =
+      normalizeHeaderValue(request.headers["x-device-proof-timestamp"]) ?? query.proofTimestamp;
+    const registeredDevice = deviceId ? deps.deviceRegistry.getRegisteredDevice(deviceId) : null;
 
     if (role === "desktop" && (!deviceId || !publicKey)) {
       sendJson(
         socket,
         createErrorEnvelope("UNAUTHORIZED", "desktop connections must include device identity"),
       );
+      socket.close(1008, "unauthorized");
+      return;
+    }
+
+    try {
+      assertValidDeviceProof({
+        deviceId,
+        role,
+        timestamp: deviceProofTimestamp,
+        signature: deviceProof,
+        publicKey: role === "desktop" ? publicKey : registeredDevice?.publicKey,
+      });
+    } catch (error) {
+      const envelope = isRelayProtocolError(error)
+        ? createErrorEnvelope(error.code, error.message, error.details)
+        : createErrorEnvelope("UNAUTHORIZED", "device proof was rejected");
+      sendJson(socket, envelope);
       socket.close(1008, "unauthorized");
       return;
     }
@@ -81,6 +109,15 @@ export async function registerWsRoutes(
     const grant = deviceId ? deps.deviceRegistry.getGrant(deviceId) : null;
 
     try {
+      if (role === "browser" && (!registeredDevice || registeredDevice.role !== "browser")) {
+        throw new RelayProtocolError({
+          code: "UNAUTHORIZED",
+          statusCode: 403,
+          message: "browser device is not registered for relay access",
+          details: { deviceId },
+        });
+      }
+
       assertRelayConnectionAllowed({ deviceId, role, grant });
     } catch (error) {
       const envelope = isRelayProtocolError(error)

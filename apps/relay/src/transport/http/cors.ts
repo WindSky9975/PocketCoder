@@ -3,6 +3,8 @@ import type { FastifyInstance } from "fastify";
 const ACCESS_CONTROL_ALLOW_HEADERS = [
   "content-type",
   "x-device-id",
+  "x-device-proof",
+  "x-device-proof-timestamp",
   "x-device-role",
   "x-device-public-key",
 ].join(", ");

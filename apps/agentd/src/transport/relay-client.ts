@@ -34,6 +34,7 @@ export function createRelayClient(args: {
   relayUrl: string;
   deviceId: string;
   publicKey: string;
+  createDeviceProof?: () => Promise<{ timestamp: string; signature: string }>;
   onCommand: (command: ProtocolCommandEnvelope) => Promise<void>;
 }): RelayClient {
   const WebSocketConstructor = globalThis.WebSocket as unknown as RelayWebSocketConstructor | undefined;
@@ -61,6 +62,11 @@ export function createRelayClient(args: {
       relayUrl.searchParams.set("deviceId", args.deviceId);
       relayUrl.searchParams.set("role", "desktop");
       relayUrl.searchParams.set("publicKey", args.publicKey);
+      const deviceProof = await args.createDeviceProof?.();
+      if (deviceProof) {
+        relayUrl.searchParams.set("proof", deviceProof.signature);
+        relayUrl.searchParams.set("proofTimestamp", deviceProof.timestamp);
+      }
 
       socket = new WebSocketConstructor(relayUrl.toString());
       socket.addEventListener("message", async (event) => {

@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 
 import { createReplayService } from "../../dist/modules/replay/service.js";
 import { createSessionRelayService } from "../../dist/modules/sessions/service.js";
+import { verifyDeviceProof } from "../../dist/security/device-proof.js";
 import { inspectPairingToken, consumePairingToken } from "../../dist/security/token-service.js";
 import { createRelayStorage } from "../../dist/storage/sqlite.js";
 import { createConnectionRegistry } from "../../dist/transport/ws/connection-registry.js";
@@ -36,6 +37,26 @@ function createSignedPairingToken(desktopDeviceId: string, expiresAt: string) {
     token: `pair.v1.${payload}.${signature}`,
     publicKey,
   };
+}
+
+function createDeviceProof(args: {
+  deviceId: string;
+  role: "desktop" | "browser";
+  timestamp: string;
+  privateKey: string;
+}) {
+  return sign(
+    "sha256",
+    Buffer.from(
+      JSON.stringify({
+        deviceId: args.deviceId,
+        role: args.role,
+        timestamp: args.timestamp,
+      }),
+      "utf8",
+    ),
+    args.privateKey,
+  ).toString("base64url");
 }
 
 describe("relay security and dedupe", () => {
@@ -90,6 +111,50 @@ describe("relay security and dedupe", () => {
 
     assert.equal(inspection.accepted, false);
     assert.equal(inspection.reason, "untrusted");
+  });
+
+  it("verifies signed device proofs only inside the accepted time window", () => {
+    const { privateKey, publicKey } = generateKeyPairSync("ec", {
+      namedCurve: "prime256v1",
+      privateKeyEncoding: {
+        format: "pem",
+        type: "pkcs8",
+      },
+      publicKeyEncoding: {
+        format: "pem",
+        type: "spki",
+      },
+    });
+    const timestamp = "2026-04-03T10:00:00.000Z";
+    const signature = createDeviceProof({
+      deviceId: "browser-1",
+      role: "browser",
+      timestamp,
+      privateKey,
+    });
+
+    assert.equal(
+      verifyDeviceProof({
+        deviceId: "browser-1",
+        role: "browser",
+        timestamp,
+        signature,
+        publicKey,
+        nowIso: "2026-04-03T10:02:00.000Z",
+      }),
+      true,
+    );
+    assert.equal(
+      verifyDeviceProof({
+        deviceId: "browser-1",
+        role: "browser",
+        timestamp,
+        signature,
+        publicKey,
+        nowIso: "2026-04-03T10:10:01.000Z",
+      }),
+      false,
+    );
   });
 
   it("marks duplicate relay commands as dedupe hits after the first forward", () => {

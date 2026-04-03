@@ -1,8 +1,11 @@
 import { sessionDirectoryResponseSchema, type SessionSummaryPayload } from "@pocketcoder/protocol";
 
+import { createBrowserDeviceProof } from "../crypto/device-proof.ts";
+
 export async function fetchRelaySessionDirectory(args: {
   relayOrigin: string;
   deviceId: string;
+  createDeviceProof?: (deviceId: string) => Promise<{ timestamp: string; signature: string }>;
   fetchImpl?: typeof fetch;
 }): Promise<SessionSummaryPayload[]> {
   const fetchImpl = args.fetchImpl ?? globalThis.fetch;
@@ -10,9 +13,16 @@ export async function fetchRelaySessionDirectory(args: {
     throw new Error("fetch is not available in this runtime");
   }
 
+  const createDeviceProof =
+    args.createDeviceProof ??
+    (async (deviceId: string) => createBrowserDeviceProof({ deviceId }));
+  const deviceProof = await createDeviceProof(args.deviceId);
+
   const response = await fetchImpl(new URL("/sessions", args.relayOrigin), {
     headers: {
       "x-device-id": args.deviceId,
+      "x-device-proof": deviceProof.signature,
+      "x-device-proof-timestamp": deviceProof.timestamp,
     },
   });
   const payload = (await response.json()) as unknown;

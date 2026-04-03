@@ -49,8 +49,25 @@ function bytesToBase64(bytes: Uint8Array): string {
   throw new Error("base64 encoding is not available in this runtime");
 }
 
+function bytesToBase64Url(bytes: Uint8Array): string {
+  return bytesToBase64(bytes).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/u, "");
+}
+
 function bufferToBase64(value: ArrayBuffer): string {
   return bytesToBase64(new Uint8Array(value));
+}
+
+function base64ToBytes(value: string): Uint8Array {
+  if (typeof globalThis.atob !== "function") {
+    throw new Error("base64 decoding is not available in this runtime");
+  }
+
+  const binary = globalThis.atob(value);
+  return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+}
+
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
 }
 
 async function computePublicKeyFingerprint(publicKey: string): Promise<string> {
@@ -111,6 +128,23 @@ export function createBrowserDeviceKeyRecord(deviceId: string): BrowserDeviceKey
   };
 }
 
+function parsePersistedBrowserKeyRecord(raw: string): PersistedBrowserKeyRecord | null {
+  const parsed = JSON.parse(raw) as Partial<PersistedBrowserKeyRecord>;
+  if (
+    typeof parsed.deviceId !== "string" ||
+    typeof parsed.publicKey !== "string" ||
+    typeof parsed.privateKey !== "string"
+  ) {
+    return null;
+  }
+
+  return {
+    deviceId: parsed.deviceId,
+    publicKey: parsed.publicKey,
+    privateKey: parsed.privateKey,
+  };
+}
+
 export async function loadOrCreateBrowserDeviceKeyRecord(args: {
   deviceId: string;
   storage?: BrowserKeyStorageLike;
@@ -122,12 +156,8 @@ export async function loadOrCreateBrowserDeviceKeyRecord(args: {
 
   const raw = storage.getItem(BROWSER_KEY_STORAGE_KEY);
   if (raw) {
-    const parsed = JSON.parse(raw) as Partial<PersistedBrowserKeyRecord>;
-    if (
-      typeof parsed.deviceId === "string" &&
-      typeof parsed.publicKey === "string" &&
-      typeof parsed.privateKey === "string"
-    ) {
+    const parsed = parsePersistedBrowserKeyRecord(raw);
+    if (parsed) {
       const fingerprint = await computePublicKeyFingerprint(parsed.publicKey);
       return {
         deviceId: parsed.deviceId,
@@ -152,4 +182,50 @@ export async function loadOrCreateBrowserDeviceKeyRecord(args: {
     privateKeyRef: `browser-secure-store://${BROWSER_KEY_STORAGE_KEY}`,
     pairedAt: null,
   };
+}
+
+export async function signBrowserPayload(args: {
+  payload: string;
+  storage?: BrowserKeyStorageLike;
+}): Promise<string> {
+  const storage = resolveBrowserStorage(args.storage);
+  if (!storage) {
+    throw new Error("browser secure storage is not available");
+  }
+
+  if (!globalThis.crypto?.subtle) {
+    throw new Error("Web Crypto is not available in this runtime");
+  }
+
+  const raw = storage.getItem(BROWSER_KEY_STORAGE_KEY);
+  if (!raw) {
+    throw new Error("browser device key is missing");
+  }
+
+  const persistedRecord = parsePersistedBrowserKeyRecord(raw);
+  if (!persistedRecord) {
+    throw new Error("browser device key is invalid");
+  }
+
+  const privateKey = await globalThis.crypto.subtle.importKey(
+    "pkcs8",
+    toArrayBuffer(base64ToBytes(persistedRecord.privateKey)),
+    {
+      name: "ECDSA",
+      namedCurve: "P-256",
+    },
+    false,
+    ["sign"],
+  );
+
+  const signature = await globalThis.crypto.subtle.sign(
+    {
+      name: "ECDSA",
+      hash: "SHA-256",
+    },
+    privateKey,
+    new TextEncoder().encode(args.payload),
+  );
+
+  return bytesToBase64Url(new Uint8Array(signature));
 }

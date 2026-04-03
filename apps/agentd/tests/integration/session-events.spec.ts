@@ -10,6 +10,7 @@ import {
   signPayloadWithDeviceKey,
   verifyDeviceSignature,
 } from "../../dist/security/device-keys.js";
+import { createDesktopDeviceProofSigner } from "../../dist/security/device-proof.js";
 import { createSessionManager } from "../../dist/sessions/session-manager.js";
 import { createSessionRegistry } from "../../dist/sessions/session-registry.js";
 import { createCommandHandler } from "../../dist/transport/command-handler.js";
@@ -111,6 +112,10 @@ describe("agentd event flow and approval handoff", () => {
         relayUrl: "ws://127.0.0.1:8787/ws",
         deviceId: "desktop-1",
         publicKey: "desktop-public-key",
+        createDeviceProof: async () => ({
+          timestamp: "2026-04-03T10:00:00.000Z",
+          signature: "desktop-proof",
+        }),
         onCommand: async (command) => {
           receivedCommands.push(command);
         },
@@ -121,7 +126,7 @@ describe("agentd event flow and approval handoff", () => {
       assert.equal(FakeWebSocket.instances.length, 1);
       assert.equal(
         FakeWebSocket.instances[0]?.url.includes(
-          "deviceId=desktop-1&role=desktop&publicKey=desktop-public-key",
+          "deviceId=desktop-1&role=desktop&publicKey=desktop-public-key&proof=desktop-proof&proofTimestamp=2026-04-03T10%3A00%3A00.000Z",
         ),
         true,
       );
@@ -190,6 +195,34 @@ describe("agentd event flow and approval handoff", () => {
         publicKey: deviceKey.publicKey,
         payload,
         signature,
+      }),
+      true,
+    );
+  });
+
+  it("derives relay device proofs from the persisted desktop private key", async () => {
+    const runtimeRoot = fs.mkdtempSync(path.join(os.tmpdir(), "pocketcoder-agentd-proof-"));
+    const deviceKey = loadOrCreateDeviceKeyRecord({
+      runtimeRoot,
+      deviceId: "desktop-1",
+    });
+    const signDeviceProof = createDesktopDeviceProofSigner({
+      runtimeRoot,
+      deviceId: deviceKey.deviceId,
+    });
+
+    const proof = await signDeviceProof();
+    const payload = JSON.stringify({
+      deviceId: "desktop-1",
+      role: "desktop",
+      timestamp: proof.timestamp,
+    });
+
+    assert.equal(
+      verifyDeviceSignature({
+        publicKey: deviceKey.publicKey,
+        payload,
+        signature: proof.signature,
       }),
       true,
     );

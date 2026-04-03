@@ -10,6 +10,10 @@ describe("relay session directory client", () => {
     const sessions = await fetchRelaySessionDirectory({
       relayOrigin: "http://relay.test",
       deviceId: "browser-1",
+      createDeviceProof: async () => ({
+        timestamp: "2026-04-03T10:00:00.000Z",
+        signature: "browser-proof",
+      }),
       fetchImpl: async (input, init) => {
         requests.push({
           url: String(input),
@@ -39,6 +43,8 @@ describe("relay session directory client", () => {
     assert.equal(requests[0]?.url, "http://relay.test/sessions");
     assert.deepEqual(requests[0]?.headers, {
       "x-device-id": "browser-1",
+      "x-device-proof": "browser-proof",
+      "x-device-proof-timestamp": "2026-04-03T10:00:00.000Z",
     });
     assert.equal(sessions[0]?.sessionId, "session-1");
   });
@@ -49,6 +55,10 @@ describe("relay session directory client", () => {
         fetchRelaySessionDirectory({
           relayOrigin: "http://relay.test",
           deviceId: "browser-1",
+          createDeviceProof: async () => ({
+            timestamp: "2026-04-03T10:00:00.000Z",
+            signature: "browser-proof",
+          }),
           fetchImpl: async () =>
             ({
               ok: false,

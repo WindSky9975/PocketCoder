@@ -5,6 +5,7 @@ import { isRelayProtocolError } from "../../infra/protocol-error.js";
 import type { PairingModule } from "../../modules/pairing/module.js";
 import type { SessionRelayService } from "../../modules/sessions/service.js";
 import { assertRelayConnectionAllowed } from "../../security/access-control.js";
+import { assertValidDeviceProof } from "../../security/device-proof.js";
 import type { DeviceRegistry } from "../../security/device-registry.js";
 import type { RelayStorage } from "../../storage/sqlite.js";
 import { createErrorEnvelope } from "../protocol-messages.js";
@@ -51,10 +52,21 @@ export async function registerHttpRoutes(
   app.get("/sessions", async (request, reply) => {
     const query = request.query as { deviceId?: string };
     const deviceId = normalizeHeaderValue(request.headers["x-device-id"]) ?? query.deviceId;
+    const deviceProof = normalizeHeaderValue(request.headers["x-device-proof"]);
+    const deviceProofTimestamp = normalizeHeaderValue(
+      request.headers["x-device-proof-timestamp"],
+    );
     const registeredDevice = deviceId ? deps.deviceRegistry.getRegisteredDevice(deviceId) : null;
     const grant = deviceId ? deps.deviceRegistry.getGrant(deviceId) : null;
 
     try {
+      assertValidDeviceProof({
+        deviceId,
+        role: "browser",
+        timestamp: deviceProofTimestamp,
+        signature: deviceProof,
+        publicKey: registeredDevice?.publicKey,
+      });
       assertRelayConnectionAllowed({
         deviceId,
         role: "browser",

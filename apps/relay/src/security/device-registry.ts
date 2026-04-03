@@ -63,6 +63,15 @@ export function createDeviceRegistry(repository: DeviceRecordRepository): Device
     ensureDesktopDevice(input) {
       const existing = repository.get(input.deviceId);
       if (existing) {
+        if (existing.role !== "desktop") {
+          throw new RelayProtocolError({
+            code: "UNAUTHORIZED",
+            statusCode: 403,
+            message: "device identity is already bound to a non-desktop role",
+            details: { deviceId: input.deviceId, role: existing.role },
+          });
+        }
+
         if (existing.publicKey !== input.publicKey) {
           throw new RelayProtocolError({
             code: "UNAUTHORIZED",

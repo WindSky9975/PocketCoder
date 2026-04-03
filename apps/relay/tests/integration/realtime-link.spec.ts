@@ -30,8 +30,24 @@ function createSignedPairingToken(desktopDeviceId: string, expiresAt: string) {
 
   return {
     token: `pair.v1.${payload}.${signature}`,
+    privateKey,
     publicKey,
   };
+}
+
+function createDeviceProof(args: {
+  deviceId: string;
+  role: "desktop" | "browser";
+  privateKey: string;
+  timestamp: string;
+}) {
+  const payload = JSON.stringify({
+    deviceId: args.deviceId,
+    role: args.role,
+    timestamp: args.timestamp,
+  });
+
+  return sign("sha256", Buffer.from(payload, "utf8"), args.privateKey).toString("base64url");
 }
 
 function createSocketHarness(url: string) {
@@ -110,6 +126,17 @@ describe("relay realtime integration", () => {
     const wsUrl = `ws://127.0.0.1:${port}/ws`;
 
     const desktopToken = createSignedPairingToken("desktop-1", "2099-01-01T00:05:00.000Z");
+    const browserIdentity = generateKeyPairSync("ec", {
+      namedCurve: "prime256v1",
+      privateKeyEncoding: {
+        format: "pem",
+        type: "pkcs8",
+      },
+      publicKeyEncoding: {
+        format: "pem",
+        type: "spki",
+      },
+    });
 
     try {
       const tokenResponse = await fetch(
@@ -132,7 +159,7 @@ describe("relay realtime integration", () => {
           payload: {
             pairingToken: desktopToken.token,
             deviceName: "Pixel",
-            publicKey: "browser-public-key",
+            publicKey: browserIdentity.publicKey,
           },
         }),
       });
@@ -144,11 +171,27 @@ describe("relay realtime integration", () => {
       const browserDeviceId = pairingBody.envelope.payload.deviceId;
       assert.equal(browserDeviceId.startsWith("browser-"), true);
       assert.equal(pairingBody.desktopPublicKey, desktopToken.publicKey);
+      const desktopProofTimestamp = createRecentIso(-3_000);
+      const browserProofTimestamp = createRecentIso(-2_500);
+      const desktopProof = createDeviceProof({
+        deviceId: "desktop-1",
+        role: "desktop",
+        privateKey: desktopToken.privateKey,
+        timestamp: desktopProofTimestamp,
+      });
+      const browserProof = createDeviceProof({
+        deviceId: browserDeviceId,
+        role: "browser",
+        privateKey: browserIdentity.privateKey,
+        timestamp: browserProofTimestamp,
+      });
 
       const desktopSocket = createSocketHarness(
-        `${wsUrl}?deviceId=desktop-1&role=desktop&publicKey=${encodeURIComponent(desktopToken.publicKey)}`,
+        `${wsUrl}?deviceId=desktop-1&role=desktop&publicKey=${encodeURIComponent(desktopToken.publicKey)}&proof=${encodeURIComponent(desktopProof)}&proofTimestamp=${encodeURIComponent(desktopProofTimestamp)}`,
       );
-      const browserSocket = createSocketHarness(`${wsUrl}?deviceId=${browserDeviceId}&role=browser`);
+      const browserSocket = createSocketHarness(
+        `${wsUrl}?deviceId=${browserDeviceId}&role=browser&proof=${encodeURIComponent(browserProof)}&proofTimestamp=${encodeURIComponent(browserProofTimestamp)}`,
+      );
 
       await Promise.all([desktopSocket.waitForOpen(), browserSocket.waitForOpen()]);
       await Promise.all([desktopSocket.nextMessage(), browserSocket.nextMessage()]);
@@ -185,6 +228,8 @@ describe("relay realtime integration", () => {
       const sessionDirectoryResponse = await fetch(`${baseUrl}/sessions`, {
         headers: {
           "x-device-id": browserDeviceId,
+          "x-device-proof": browserProof,
+          "x-device-proof-timestamp": browserProofTimestamp,
           origin: "http://localhost:3000",
         },
       });
@@ -286,6 +331,10 @@ describe("relay realtime integration", () => {
       assert.equal(
         response.headers.get("access-control-allow-methods"),
         "GET, POST, OPTIONS",
+      );
+      assert.equal(
+        response.headers.get("access-control-allow-headers"),
+        "content-type, x-device-id, x-device-proof, x-device-proof-timestamp, x-device-role, x-device-public-key",
       );
     } finally {
       await app.close();

@@ -3,6 +3,7 @@ import { createCodexSessionAdapter } from "./providers/codex/codex-session-adapt
 import { createDesktopControlRegistry } from "./platform/windows/control-registry.js";
 import { createInputDetector } from "./platform/windows/input-detector.js";
 import { loadOrCreateDeviceKeyRecord } from "./security/device-keys.js";
+import { createDesktopDeviceProofSigner } from "./security/device-proof.js";
 import { createSessionManager } from "./sessions/session-manager.js";
 import { createSessionRegistry } from "./sessions/session-registry.js";
 import { createCommandHandler } from "./transport/command-handler.js";
@@ -52,6 +53,10 @@ export function createAgentdRuntime(): AgentdRuntime {
     relayUrl: config.relayUrl,
     deviceId: deviceKey.deviceId,
     publicKey: deviceKey.publicKey,
+    createDeviceProof: createDesktopDeviceProofSigner({
+      runtimeRoot: paths.runtimeRoot,
+      deviceId: deviceKey.deviceId,
+    }),
     onCommand: async (command) => {
       const result = await commandHandler.handle(command);
       if (result.updatedSession && eventPublisher) {

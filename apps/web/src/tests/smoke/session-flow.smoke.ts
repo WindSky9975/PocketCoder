@@ -71,6 +71,10 @@ describe("pair to session-detail prompt main flow", () => {
     const client = createBrowserRelayClient({
       relayUrl: resolveRelayWebSocketUrl("https://relay.example"),
       deviceId: "browser-1",
+      createDeviceProof: async () => ({
+        timestamp: "2026-04-03T10:00:00.000Z",
+        signature: "browser-proof",
+      }),
       onMessage(message) {
         inboundTypes.push(message.type);
       },
@@ -83,7 +87,10 @@ describe("pair to session-detail prompt main flow", () => {
 
     const socket = MockWebSocket.instances[0];
     assert.ok(socket);
-    assert.equal(socket?.url, "wss://relay.example/ws?deviceId=browser-1&role=browser");
+    assert.equal(
+      socket?.url,
+      "wss://relay.example/ws?deviceId=browser-1&role=browser&proof=browser-proof&proofTimestamp=2026-04-03T10%3A00%3A00.000Z",
+    );
 
     socket?.receive({
       type: "connected",
@@ -140,7 +147,7 @@ describe("pair to session-detail prompt main flow", () => {
     assert.ok(secondSocket);
     assert.equal(
       secondSocket?.url,
-      "wss://relay.example/ws?deviceId=browser-1&role=browser",
+      "wss://relay.example/ws?deviceId=browser-1&role=browser&proof=browser-proof&proofTimestamp=2026-04-03T10%3A00%3A00.000Z",
     );
     assert.deepEqual(transportStates, ["connected", "disconnected", "connected"]);
   });
