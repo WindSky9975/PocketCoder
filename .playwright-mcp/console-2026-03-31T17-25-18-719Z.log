@@ -1,2 +1,0 @@
-[     470ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://api.github.com/repos/slopus/happy/contents/:0
-[   41962ms] [ERROR] Blocked script execution in 'https://raw.githubusercontent.com/slopus/happy/main/package.json' because the document's frame is sandboxed and the 'allow-scripts' permission is not set. @ https://raw.githubusercontent.com/slopus/happy/main/package.json:0

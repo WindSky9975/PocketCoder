@@ -1,3 +1,4 @@
+# dependencies and build outputs
 node_modules/
 dist/
 coverage/
@@ -5,15 +6,44 @@ coverage/
 .next-*/
 out/
 *.tsbuildinfo
+
+# environment files
 .env
 .env.*
 !.env.example
+
+# package manager and local tool logs
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.codex-cache/
 .playwright/
 .playwright-mcp/
+ws-requests.txt
+
+# runtime data
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.db
+*.db-shm
+*.db-wal
+
+# editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS metadata
 .DS_Store
 Thumbs.db
+
+# local agent/runtime state
 apps/agentd/.agentd/
 .agentd/
+
+# generated framework metadata
 apps/web/.next-dev-3000/
 apps/web/next-env.d.ts

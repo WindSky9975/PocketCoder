@@ -1,1 +1,0 @@
-[   10640ms] [ERROR] Blocked script execution in 'https://raw.githubusercontent.com/slopus/happy/main/packages/happy-server/package.json' because the document's frame is sandboxed and the 'allow-scripts' permission is not set. @ https://raw.githubusercontent.com/slopus/happy/main/packages/happy-server/package.json:0
