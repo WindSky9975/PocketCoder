@@ -147,7 +147,11 @@ describe("pair to session-detail prompt main flow", () => {
     assert.ok(secondSocket);
     assert.equal(
       secondSocket?.url,
+<<<<<<< HEAD
       "wss://relay.example/ws?deviceId=browser-1&role=browser&proof=browser-proof&proofTimestamp=2026-04-03T10%3A00%3A00.000Z",
+=======
+      "wss://relay.example/ws?deviceId=browser-1&role=browser",
+>>>>>>> 03c915497dd08ded000ed763332ec3d8bd62e20e
     );
     assert.deepEqual(transportStates, ["connected", "disconnected", "connected"]);
   });
