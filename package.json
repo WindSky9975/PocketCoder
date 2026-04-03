@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.8.0"
   },
   "scripts": {
     "dev": "node scripts/dev.mjs",
