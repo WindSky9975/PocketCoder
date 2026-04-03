@@ -1,40 +1,44 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- Current repo state is docs-first. Core design docs live in [`设计方案/`](D:/develop/study/AI/PocketCoder/设计方案), repo policies in [`项目开发规范.md`](D:/develop/study/AI/PocketCoder/项目开发规范.md), and execution plans in [`skills-generate-plan/`](D:/develop/study/AI/PocketCoder/skills-generate-plan).
-- Repo-local Codex skills live under [`.codex/skills/`](D:/develop/study/AI/PocketCoder/.codex/skills). Each skill should contain `SKILL.md`, `agents/openai.yaml`, optional `references/`, `assets/`, and `scripts/`.
-- Target app layout is fixed by design: `apps/web`, `apps/agentd`, `apps/relay`, and `packages/protocol`. Deployment files belong in [`infra/`](D:/develop/study/AI/PocketCoder/infra), not inside app source trees.
+- Core app workspaces are fixed: `apps/web`, `apps/agentd`, `apps/relay`, and `packages/protocol`.
+- Deployment files belong in `infra/`. Planning and design materials belong in the repo docs and `skills-generate-plan/`.
+- Repo-local Codex assets live under `.codex/`, especially `.codex/skills/`, `.codex/AGENTS.md`, and `.codex/PROJECT.md`.
+- Keep high cohesion and low coupling: `web`, `agentd`, and `relay` must not import each other directly; shared contracts come only from `packages/protocol`.
 
 ## Build, Test, and Development Commands
-- Current repo maintenance:
-  - `python D:\WindSky\.codex\skills\.system\skill-creator\scripts\quick_validate.py .codex\skills\<skill-name>` validates a skill folder.
-  - `python -m py_compile .codex\skills\<skill-name>\scripts\*.py` checks skill helper scripts.
-  - `rg --files` or `rg "<pattern>"` is the preferred way to inspect the repo.
-- Once the monorepo is bootstrapped, run all workspace tasks from the repo root:
+- Run repo-wide checks from the root:
   - `npm run lint`
   - `npm run typecheck`
   - `npm run test`
   - `npm run build`
+- Start local development with `npm run dev`.
+- Prefer `rg --files` and `rg "<pattern>"` for fast repo inspection.
 
 ## Coding Style & Naming Conventions
-- Code, identifiers, protocol fields, and commit types use English. Docs, plans, and PR descriptions default to Chinese.
-- Package names follow `@pocketcoder/<name>`. Directories use lowercase names and stable boundaries.
-- Do not let `web`, `agentd`, and `relay` import each other’s source; shared contracts must come only from `packages/protocol`.
-- Keep modules high-cohesion and low-coupling. Avoid cross-layer shortcuts and implicit state.
+- Code, identifiers, package names, protocol fields, and directory names use English.
+- Documentation, plans, issue discussion, and review notes default to Chinese.
+- Package names follow `@pocketcoder/<name>`.
+- Keep module boundaries explicit. Do not bury platform logic, protocol parsing, or storage policy inside UI or transport glue code.
 
 ## Testing Guidelines
-- Tests stay near the owning workspace; do not create a separate test workspace.
-- Naming:
-  - unit/integration tests: `*.spec.ts`
-  - smoke tests: `*.smoke.ts`
-- Minimum coverage follows the repo policy: protocol schemas, relay/agentd core logic, and web smoke flows must be testable.
+- Tests stay inside the owning workspace.
+- Naming rules:
+  - `*.spec.ts` for unit and integration tests
+  - `*.smoke.ts` for smoke flow tests
+- Any high-risk change to protocol, relay routing, session state, pairing, or desktop control should add or update regression coverage.
 
-## Commit & Pull Request Guidelines
-- Recent history uses short summary commits, but the repository standard is Conventional Commits: `type(scope): subject`.
-- Use examples like `feat(protocol): add session subscribe schema` or `docs(repo): add milestone plan`.
-- PRs should state scope, affected modules, validation performed, and any protocol/config/security impact. Include screenshots only for web UI changes.
+## Commit & Push Guidelines
+- After completing each meaningful, verifiable part of the project, commit and push the code proactively instead of waiting until the very end.
+- Commit messages must be written in Chinese and must clearly describe the actual change. Do not use vague messages such as `update` or `fix`.
+- Prefer Conventional Commit prefixes, but the subject text after the prefix must be Chinese, for example:
+  - `feat(web): <Chinese summary for the completed web change>`
+  - `fix(relay): <Chinese summary for the relay bug fix>`
+  - `chore(repo): <Chinese summary for the repo maintenance change>`
+- Before pushing, make sure the related validation has been run and the working tree does not include accidental generated artifacts.
+- Before pushing, explicitly verify that edited files, docs, and commit text do not contain garbled Chinese or mojibake caused by encoding issues.
 
 ## Security & Configuration Tips
-- Never commit real keys, pairing tokens, credentials, or sensitive logs.
-- Only commit example config such as `.env.example`; document every new environment variable.
-- AI-generated code, protocol changes, security logic, and concurrency-sensitive code require human review before merge.
+- Never commit real keys, pairing tokens, credentials, runtime caches, screenshots, or sensitive logs.
+- Only commit example configuration such as `.env.example`.
+- Generated local artifacts such as `.next*`, `.agentd/`, `.playwright-mcp/`, `.codex-cache/`, and temporary trace files must stay ignored.
